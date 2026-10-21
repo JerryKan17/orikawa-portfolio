@@ -1,39 +1,55 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
 import { NotebookShowcase } from './components/NotebookShowcase';
 import { T0VProcess } from './components/T0VProcess';
-import { SoundLabSection } from './components/SoundLabSection';
 import { AboutSection } from './components/AboutSection';
 import { ContactSection } from './components/ContactSection';
+import { LegalPage } from './components/LegalPage';
 
 export default function App() {
+  const [currentPage, setCurrentPage] = useState<'home' | 'legal'>('home');
+
   useEffect(() => {
-    // Smooth unlock audio context on initial user click
-    const handleFirstInteraction = () => {
-      window.removeEventListener('click', handleFirstInteraction);
-      window.removeEventListener('keydown', handleFirstInteraction);
+    // Listen for #legal in URL hash
+    const handleHash = () => {
+      if (window.location.hash === '#legal') {
+        setCurrentPage('legal');
+        window.scrollTo(0, 0);
+      } else if (currentPage === 'legal') {
+        setCurrentPage('home');
+      }
     };
 
-    window.addEventListener('click', handleFirstInteraction);
-    window.addEventListener('keydown', handleFirstInteraction);
+    window.addEventListener('hashchange', handleHash);
+    if (window.location.hash === '#legal') {
+      setCurrentPage('legal');
+    }
 
-    return () => {
-      window.removeEventListener('click', handleFirstInteraction);
-      window.removeEventListener('keydown', handleFirstInteraction);
-    };
-  }, []);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, [currentPage]);
+
+  const openLegal = () => {
+    setCurrentPage('legal');
+    window.location.hash = 'legal';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const closeLegal = () => {
+    setCurrentPage('home');
+    window.history.pushState(null, '', ' ');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  if (currentPage === 'legal') {
+    return <LegalPage onBack={closeLegal} />;
+  }
 
   return (
     <div className="min-h-screen bg-[#fff7dd] text-[#131522] selection:bg-[#29E3BE] selection:text-[#131522] relative overflow-x-hidden">
       
-      {/* Background Organic Noise Texture */}
-      <div
-        className="fixed inset-0 pointer-events-none opacity-[0.035] z-50 mix-blend-multiply"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
-        }}
-      />
+      {/* Paper grain and tactile organic texture overlay */}
+      <div className="paper-grain-overlay" aria-hidden="true" />
 
       {/* Navigation Bar */}
       <Navbar />
@@ -43,12 +59,11 @@ export default function App() {
         <HeroSection />
         <NotebookShowcase />
         <T0VProcess />
-        <SoundLabSection />
         <AboutSection />
       </main>
 
       {/* Contact & Footer */}
-      <ContactSection />
+      <ContactSection onOpenLegal={openLegal} />
 
     </div>
   );

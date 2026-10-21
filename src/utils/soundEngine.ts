@@ -3,7 +3,7 @@
 
 class SoundEngine {
   private ctx: AudioContext | null = null;
-  private isMuted: boolean = false;
+  private isMuted: boolean = true; // No sound for now
   private isInitialized: boolean = false;
 
   private initContext() {
@@ -26,11 +26,7 @@ class SoundEngine {
   }
 
   public toggleMute(): boolean {
-    this.initContext();
     this.isMuted = !this.isMuted;
-    if (!this.isMuted) {
-      this.playTapeClick(880, 0.04);
-    }
     return this.isMuted;
   }
 

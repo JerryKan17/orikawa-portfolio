@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --cream: #fff7dd;
+    --midnight: #131522;
+    --softblue: #323A72;
+    --mint: #29E3BE;
+    --mimosa: #FFF951;
+    --fushia: #E019D7;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    background-color: var(--cream);
+    color: var(--midnight);
+  }
+
+  body {
+    background-color: var(--cream);
+    color: var(--midnight);
+    font-family: 'Outfit', sans-serif;
+    overflow-x: hidden;
+  }
+}
+
+.font-serif {
+  font-family: 'EB Garamond', Garamond, Georgia, serif;
+}
+
+.font-sans {
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.font-handwriting {
+  font-family: 'Caveat', cursive;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Notebook Grid & Paper textures */
+.bg-notebook-grid {
+  background-size: 28px 28px;
+  background-image: 
+    linear-gradient(to right, rgba(50, 58, 114, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(50, 58, 114, 0.07) 1px, transparent 1px);
+}
+
+.bg-notebook-lines {
+  background-size: 100% 28px;
+  background-image: linear-gradient(to bottom, transparent 27px, rgba(50, 58, 114, 0.1) 28px);
+}
+
+.bg-dot-pattern {
+  background-size: 20px 20px;
+  background-image: radial-gradient(circle, rgba(50, 58, 114, 0.15) 1px, transparent 1px);
+}
+
+/* Masking Tape effect */
+.masking-tape {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.65);
+  box-shadow: 0 1px 4px rgba(19, 21, 34, 0.08);
+  backdrop-filter: blur(2px);
+  z-index: 25;
+  border-left: 2px dashed rgba(19, 21, 34, 0.15);
+  border-right: 2px dashed rgba(19, 21, 34, 0.15);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #f7f1d4;
+}
+::-webkit-scrollbar-thumb {
+  background: #323A72;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #29E3BE;
+}
+
+/* Audio wave animation */
+@keyframes audio-pulse {
+  0%, 100% { height: 25%; }
+  50% { height: 95%; }
+}
+
+.animate-audio-bar {
+  animation: audio-pulse 1.2s ease-in-out infinite alternate;
+}

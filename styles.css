@@ -1,7 +1,7 @@
 /* ==========================================================================
    orikawa laurentin · styles.css
    1. Variables  2. Base  3. Header et logo  4. Vague et boutons  5. Hero
-   5b. Lightbox (showreel et projets)  5c. Works  6. Sections à construire  7. Footer  8. Apparition au scroll
+   5b. Lightbox (showreel et projets)  5c. Works  5d. About  6. Sections à construire  7. Footer  8. Apparition au scroll
    8b. Grain de papier  8c. Curseur
    9. Écrans étroits  10. Mouvement réduit
    ========================================================================== */
@@ -413,10 +413,72 @@ a { color: inherit; }
   opacity: .6;
 }
 .hero__cta {
-  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
   flex: none;
 }
-/* L'indication ne prend pas de place : elle apparaît là où la note s'efface */
+.hero__play { position: relative; }
+
+/* Appel vers Works : texte + flèche qui descend doucement.
+   La pointe de la flèche a un écho menthe, comme la vague du logo. Au survol : la flèche descend
+   un peu plus et le texte se souligne au dégradé du hero (comme les liens du menu). */
+.hero__works {
+  --underline: linear-gradient(90deg, var(--night), var(--blue) 25%, var(--mint) 50%, var(--blue) 75%, var(--night));
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  color: inherit;
+  font: 700 .875rem/1 var(--font-title);
+  letter-spacing: .01em;
+  text-decoration: none;
+  transition: opacity var(--t-base) var(--ease-out), transform var(--t-base) var(--ease-out);
+}
+.hero__works-label { position: relative; }
+.hero__works-label::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -6px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--underline);
+  background-size: 300% 100%;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--t-base) var(--ease-out);
+  animation: drift 3s linear infinite alternate;
+}
+.hero__works:hover .hero__works-label::after,
+.hero__works:focus-visible .hero__works-label::after { transform: scaleX(1); }
+.hero__arrow {
+  width: 14px;
+  height: 24px;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  animation: arrow-bob 2.4s var(--ease-in-out) infinite;
+}
+.hero__arrow-echo {
+  stroke: var(--mint);
+  opacity: .8;
+  transition: transform var(--t-base) var(--ease-out);
+}
+.hero__works:hover .hero__arrow-echo,
+.hero__works:focus-visible .hero__arrow-echo { transform: translateY(-3px); }
+.hero__works:hover .hero__arrow,
+.hero__works:focus-visible .hero__arrow { animation-play-state: paused; translate: 0 3px; }
+@keyframes arrow-bob {
+  0%, 100% { transform: translateY(-2px); }
+  50%      { transform: translateY(2px); }
+}
+
+/* L'indication ne prend pas de place : elle apparaît là où la note et l'appel vers Works s'effacent */
 .hero__hint {
   position: absolute;
   top: 50%;
@@ -436,7 +498,8 @@ a { color: inherit; }
 .hero.is-reveal .hero__title { color: #fff; }
 .hero.is-reveal .hero__foot { color: var(--cream); text-shadow: 0 1px 24px rgb(19 21 34 / .45); }
 .hero.is-reveal .hero__hint { opacity: 1; transform: none; }
-.hero.is-reveal .hero__lede { opacity: 0; transform: translateY(6px); }
+.hero.is-reveal .hero__lede,
+.hero.is-reveal .hero__works { opacity: 0; transform: translateY(6px); pointer-events: none; }
 .hero.is-reveal .btn--solid {
   --wave-1: var(--night);
   --btn-bg: var(--cream);
@@ -599,26 +662,29 @@ a { color: inherit; }
 .has-lightbox { overflow: hidden; }
 
 /* 5c. WORKS --------------------------------------------------------------- */
-/* En-tête (titre, note, filtres), un film mis en avant pleine largeur, puis une grille 2 × 2.
+/* En-tête (titre, note, filtres), un film mis en avant avec ses infos, puis les projets en petites vignettes.
    Chaque vignette ouvre la lightbox avec la vidéo et la légende du projet. */
 .works {
-  padding: var(--space-32) var(--margin) var(--space-24);
+  padding: var(--space-24) var(--margin);
   border-top: 1px solid rgb(19 21 34 / .12);
 }
-.works__head {
+/* En-tête commun aux sections (Works, About…) : titre, note en annotation, et à droite les filtres */
+.section-head {
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: end;
   gap: var(--space-4) var(--space-8);
   margin-bottom: var(--space-12);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid rgb(19 21 34 / .12);
 }
-.works__title {
+.section-head__title {
   margin: 0;
-  font: 800 clamp(3rem, 7vw, 6rem)/.95 var(--font-title);
+  font: 800 clamp(2.75rem, 5.5vw, 4.75rem)/.95 var(--font-title);
   letter-spacing: -.03em;
 }
 /* Même style annotation que la note du hero */
-.works__note {
+.section-head__note {
   grid-column: 1;
   display: flex;
   align-items: center;
@@ -628,7 +694,7 @@ a { color: inherit; }
   font-size: 1rem;
   font-style: italic;
 }
-.works__note::before {
+.section-head__note::before {
   content: "";
   flex: none;
   width: 24px;
@@ -666,16 +732,27 @@ a { color: inherit; }
 }
 .chip:focus-visible { border-radius: var(--radius-pill); }
 
+/* Liste : 4 colonnes. Le film mis en avant occupe une ligne entière (vignette à gauche, infos à droite),
+   les autres projets sont de petites vignettes, 4 par ligne. */
 .works__list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-16) var(--space-8);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-12) var(--space-6);
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.work--featured { grid-column: 1 / -1; }
 .work[hidden] { display: none; }
+
+.work--featured {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  gap: var(--space-12);
+  align-items: center;
+  padding-bottom: var(--space-12);
+  border-bottom: 1px solid rgb(19 21 34 / .12);
+}
 
 /* Vignette : bouton qui ouvre la lightbox */
 .work__media {
@@ -685,13 +762,13 @@ a { color: inherit; }
   aspect-ratio: 16 / 9;
   padding: 0;
   border: 0;
-  border-radius: var(--radius-m);
+  border-radius: var(--radius-s);
   overflow: hidden;
   background: var(--night);
   isolation: isolate;
 }
-.work--featured .work__media { aspect-ratio: 2 / 1; }
-.work__media:focus-visible { outline-offset: 4px; border-radius: var(--radius-m); }
+.work--featured .work__media { border-radius: var(--radius-m); }
+.work__media:focus-visible { outline-offset: 4px; border-radius: var(--radius-s); }
 /* Image du projet : --poster: url(...) sur la vignette. En attendant, un dégradé aux couleurs de la marque. */
 .work__poster {
   position: absolute;
@@ -700,36 +777,58 @@ a { color: inherit; }
   transition: transform var(--t-slow) var(--ease-out), filter var(--t-slow) var(--ease-out);
 }
 .work__media:hover .work__poster,
-.work__media:focus-visible .work__poster { transform: scale(1.04); filter: brightness(1.08); }
+.work__media:focus-visible .work__poster { transform: scale(1.05); filter: brightness(1.08); }
 
-.work__info {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-1) var(--space-6);
-  margin-top: var(--space-4);
-}
+/* Infos sous les petites vignettes : nom, puis type en annotation */
+.work__info { margin-top: var(--space-3); }
 .work__name {
   position: relative;
+  display: inline-block;
   margin: 0;
-  font: 700 1.5rem/1.15 var(--font-title);
-  letter-spacing: -.01em;
+  font: 700 1.0625rem/1.2 var(--font-title);
+  letter-spacing: -.005em;
 }
-.work--featured .work__name { font-size: 2rem; }
 .work__meta {
-  margin: 0;
+  margin: var(--space-1) 0 0;
   color: var(--text-soft);
-  font-size: 1rem;
+  font-size: .9375rem;
   font-style: italic;
+  line-height: 1.3;
 }
+
+/* Infos du film mis en avant, à droite de la vignette */
+.work--featured .work__info { margin-top: 0; }
+.work__kicker {
+  margin: 0 0 var(--space-3);
+  color: var(--text-soft);
+  font: 600 .75rem/1 var(--font-title);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.work--featured .work__name { font-size: clamp(1.75rem, 2.6vw, 2.5rem); line-height: 1.05; letter-spacing: -.02em; }
+.work--featured .work__meta { margin-top: var(--space-2); font-size: 1.0625rem; }
+.work__facts {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-6) 0;
+}
+.work__facts > div {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr;
+  gap: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid rgb(19 21 34 / .1);
+}
+.work__facts dt { font: 700 .8125rem/1.5 var(--font-title); }
+.work__facts dd { margin: 0; font-size: 1rem; line-height: 1.4; }
+
 /* Au survol de la vignette, le nom se souligne au dégradé du hero (comme les liens du menu) */
 .work__name::after {
   content: "";
   position: absolute;
   left: 0;
   right: 0;
-  bottom: -4px;
+  bottom: -3px;
   height: 2px;
   border-radius: 2px;
   background: linear-gradient(90deg, var(--night), var(--blue) 25%, var(--mint) 50%, var(--blue) 75%, var(--night));
@@ -759,6 +858,117 @@ a { color: inherit; }
   clip: rect(0 0 0 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* 5d. ABOUT --------------------------------------------------------------- */
+/* Même en-tête que Works. Photo du studio à gauche (légende manuscrite), texte à droite,
+   puis les compétences en bulles : au survol, le GIF de la compétence apparaît au-dessus. */
+.about {
+  padding: var(--space-24) var(--margin);
+  border-top: 1px solid rgb(19 21 34 / .12);
+}
+.about__body {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: var(--space-16);
+  align-items: start;
+}
+
+/* Photo : --photo: url(assets/…) sur .about__frame. En attendant, un dégradé aux couleurs de la marque. */
+.about__photo { margin: 0; }
+.about__frame {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 5;
+  max-height: 72svh;
+  border-radius: var(--radius-m);
+  overflow: hidden;
+  background: linear-gradient(160deg, var(--blue), var(--night) 70%);
+}
+.about__frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--photo) center / cover no-repeat;
+}
+.about__placeholder {
+  position: relative;
+  color: rgb(255 247 221 / .5);
+  font: 600 .75rem/1 var(--font-title);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.about__caption {
+  margin-top: var(--space-3);
+  color: var(--text-soft);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.about__text { max-width: 40rem; }
+.about__text p { margin: 0 0 var(--space-4); }
+.about__lead {
+  font: 700 clamp(1.5rem, 2.4vw, 2.25rem)/1.15 var(--font-title);
+  letter-spacing: -.02em;
+}
+.about__text .about__lead { margin-bottom: var(--space-6); }
+.about__skills-title {
+  margin: var(--space-12) 0 var(--space-4);
+  color: var(--text-soft);
+  font: 600 .75rem/1 var(--font-title);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+/* Bulles de compétences */
+.skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.bubble {
+  position: relative;
+  padding: 12px 20px;
+  border: 1.5px solid rgb(19 21 34 / .18);
+  border-radius: var(--radius-pill);
+  font: 600 1rem/1 var(--font-title);
+  transition: background-color var(--t-base) var(--ease-out),
+              border-color var(--t-base) var(--ease-out),
+              color var(--t-base) var(--ease-out);
+}
+.bubble:hover,
+.bubble:focus-visible {
+  background: var(--night);
+  border-color: var(--night);
+  color: var(--cream);
+}
+.bubble:focus-visible { border-radius: var(--radius-pill); }
+
+/* GIF au survol : --gif: url(assets/…) sur .bubble__gif. En attendant, un dégradé. */
+.bubble__gif {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  z-index: 5;
+  width: 200px;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-s);
+  background: var(--gif, linear-gradient(135deg, var(--night), var(--blue) 55%, var(--mint) 130%)) center / cover;
+  box-shadow: 0 16px 40px rgb(19 21 34 / .25);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 8px) scale(.92);
+  transform-origin: 50% 100%;
+  transition: opacity var(--t-base) var(--ease-out), transform var(--t-base) var(--ease-out);
+}
+.bubble:hover .bubble__gif,
+.bubble:focus-visible .bubble__gif {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
 }
 
 /* 6. SECTIONS À CONSTRUIRE ------------------------------------------------ */
@@ -836,6 +1046,7 @@ a { color: inherit; }
    Seule exception : sur la vidéo et dans la lightbox, le trait principal passe en crème pour rester visible. */
 .cursor {
   --c-main: var(--blue);
+  --c-halo: var(--cream);
   --c-echo: var(--mint);
   position: fixed;
   inset: 0;
@@ -843,7 +1054,7 @@ a { color: inherit; }
   pointer-events: none;
   transition: opacity var(--t-base) var(--ease-out);
 }
-.cursor.is-dark { --c-main: var(--cream); }
+.cursor.is-dark { --c-main: var(--cream); --c-halo: var(--night); }
 .cursor.is-hidden { opacity: 0; }
 
 .cursor svg {
@@ -862,19 +1073,31 @@ a { color: inherit; }
 }
 .cursor__main { stroke: var(--c-main); }
 .cursor__echo { stroke: var(--c-echo); }
+/* Liseré de contraste sous le trait principal : crème sur fond clair, nuit sur fond foncé */
+.cursor__halo {
+  stroke: var(--c-halo);
+  stroke-width: 5.6 !important;
+  stroke-opacity: .85;
+}
 
 /* 9. ÉCRANS ÉTROITS (provisoire : la version téléphone viendra après) ------ */
+@media (max-width: 1080px) {
+  .works__list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 @media (max-width: 960px) {
+  .about__body { grid-template-columns: 1fr; }
+  .about__photo { max-width: 420px; }
+  .work--featured { grid-template-columns: 1fr; gap: var(--space-6); }
   .lightbox { --cap-h: 200px; }
   .lightbox__caption { grid-template-columns: repeat(3, 1fr); gap: var(--space-4) var(--space-6); }
   .lightbox__caption > :first-child { grid-column: 1 / -1; }
 }
 @media (max-width: 760px) {
   .nav a:not(.btn) { display: none; }
-  .works__head { grid-template-columns: 1fr; }
+  .section-head { grid-template-columns: 1fr; }
+  .about__body { gap: var(--space-8); }
   .works__filters { grid-column: 1; grid-row: auto; justify-content: flex-start; }
-  .works__list { grid-template-columns: 1fr; gap: var(--space-12); }
-  .work--featured .work__media { aspect-ratio: 16 / 9; }
+  .works__list { gap: var(--space-8) var(--space-4); }
   .hero { --foot-space: calc(var(--foot-bottom) + 110px); }
   .hero__foot { flex-direction: column; align-items: flex-start; gap: var(--space-6); }
   .hero__lede { white-space: normal; align-items: baseline; }

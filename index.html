@@ -64,11 +64,21 @@
         <!-- Note discrète, sur une ligne. Elle s'efface au survol de « See showreel ». -->
         <p class="hero__lede">Explainer and product videos for DSP software, picture and sound under one roof.</p>
         <div class="hero__cta">
-          <span class="hero__hint" aria-hidden="true">Click to watch with sound</span>
-          <button class="btn btn--solid" type="button" data-wave data-showreel data-cursor="play" data-film
-                  data-title="Showreel" data-meta="Selected work · 2026"
-                  data-video="assets/showreel.mp4" data-poster="assets/showreel-poster.jpg"
-                  data-brief="[1–2 lines]" data-concept="[1–2 lines]" data-tools="[1–2 lines]">See showreel</button>
+          <!-- Appel vers les travaux : la flèche descend vers la section Works -->
+          <a class="hero__works" href="#works">
+            <span class="hero__works-label">Explore works</span>
+            <svg class="hero__arrow" viewBox="0 0 14 24" aria-hidden="true" focusable="false">
+              <path class="hero__arrow-echo" d="M2 14.5l5 5.5 5-5.5"/>
+              <path d="M7 1.5v20M1.5 16l5.5 6 5.5-6"/>
+            </svg>
+          </a>
+          <div class="hero__play">
+            <span class="hero__hint" aria-hidden="true">Click to watch with sound</span>
+            <button class="btn btn--solid" type="button" data-wave data-showreel data-cursor="play" data-film
+                    data-title="Showreel" data-meta="Selected work · 2026"
+                    data-video="assets/showreel.mp4" data-poster="assets/showreel-poster.jpg"
+                    data-brief="[1–2 lines]" data-concept="[1–2 lines]" data-tools="[1–2 lines]">See showreel</button>
+          </div>
         </div>
       </div>
     </section>
@@ -79,12 +89,13 @@
            data-video    : la vidéo lue dans la lightbox (avec le son)
            data-poster   : l'image affichée avant la lecture, dans la lightbox
            data-brief / data-concept / data-tools : les trois textes sous la vidéo (1 à 2 lignes)
+             (pour le film mis en avant, ces textes sont écrits directement dans ses <dd data-fact="…">)
            style="--poster: url(assets/…)" sur .work__poster : l'image de la vignette
          Le nom (.work__name) et le type (.work__meta) servent aussi de titre dans la lightbox. -->
     <section class="works" id="works" aria-labelledby="works-title">
-      <div class="works__head">
-        <h2 id="works-title" class="works__title reveal">Works</h2>
-        <p class="works__note reveal" style="--i:1">Selected films for DSP and audio software makers.</p>
+      <div class="section-head">
+        <h2 id="works-title" class="section-head__title reveal">Works</h2>
+        <p class="section-head__note reveal" style="--i:1">Selected films for DSP and audio software makers.</p>
         <div class="works__filters reveal" style="--i:2" role="group" aria-label="Filter projects">
           <button class="chip is-active" type="button" data-filter="all" aria-pressed="true">All</button>
           <button class="chip" type="button" data-filter="explainer" aria-pressed="false">Explainer</button>
@@ -94,21 +105,26 @@
       </div>
 
       <ul class="works__list">
-        <li class="work work--featured reveal" data-type="product"
-            data-video="" data-poster=""
-            data-brief="[1–2 lines]" data-concept="[1–2 lines]" data-tools="[1–2 lines]">
+        <!-- Film mis en avant : vignette à gauche, infos à droite (les textes servent aussi à la lightbox) -->
+        <li class="work work--featured reveal" data-type="product" data-video="" data-poster="">
           <button class="work__media" type="button" data-cursor="play" data-film>
             <span class="work__poster" style="--a: 120deg"></span>
             <span class="sr-only">Play soothe2</span>
           </button>
           <div class="work__info">
+            <p class="work__kicker">Featured film</p>
             <h3 class="work__name">soothe2</h3>
             <p class="work__meta">Vertical product video · Concept</p>
+            <dl class="work__facts">
+              <div><dt>Brief</dt><dd data-fact="brief">[1–2 lines]</dd></div>
+              <div><dt>Concept</dt><dd data-fact="concept">[1–2 lines]</dd></div>
+              <div><dt>Tools</dt><dd data-fact="tools">[1–2 lines]</dd></div>
+            </dl>
+            <button class="btn btn--ghost work__play" type="button" data-wave data-film data-cursor="play">Play the film</button>
           </div>
         </li>
 
-        <li class="work reveal" data-type="explainer"
-            data-video="" data-poster=""
+        <li class="work reveal" data-type="explainer" data-video="" data-poster=""
             data-brief="[1–2 lines]" data-concept="[1–2 lines]" data-tools="[1–2 lines]">
           <button class="work__media" type="button" data-cursor="play" data-film>
             <span class="work__poster" style="--a: 160deg"></span>
@@ -120,8 +136,7 @@
           </div>
         </li>
 
-        <li class="work reveal" style="--i:1" data-type="product"
-            data-video="" data-poster=""
+        <li class="work reveal" style="--i:1" data-type="product" data-video="" data-poster=""
             data-brief="[1–2 lines]" data-concept="[1–2 lines]" data-tools="[1–2 lines]">
           <button class="work__media" type="button" data-cursor="play" data-film>
             <span class="work__poster" style="--a: 200deg"></span>
@@ -133,8 +148,7 @@
           </div>
         </li>
 
-        <li class="work reveal" data-type="sound explainer"
-            data-video="" data-poster=""
+        <li class="work reveal" style="--i:2" data-type="sound explainer" data-video="" data-poster=""
             data-brief="[1–2 lines]" data-concept="[1–2 lines]" data-tools="[1–2 lines]">
           <button class="work__media" type="button" data-cursor="play" data-film>
             <span class="work__poster" style="--a: 75deg"></span>
@@ -146,8 +160,7 @@
           </div>
         </li>
 
-        <li class="work reveal" style="--i:1" data-type="sound"
-            data-video="" data-poster=""
+        <li class="work reveal" style="--i:3" data-type="sound" data-video="" data-poster=""
             data-brief="[1–2 lines]" data-concept="[1–2 lines]" data-tools="[1–2 lines]">
           <button class="work__media" type="button" data-cursor="play" data-film>
             <span class="work__poster" style="--a: 30deg"></span>
@@ -162,9 +175,40 @@
     </section>
 
     <!-- SECTIONS À CONSTRUIRE : emplacements pour tester la navigation et l'apparition au scroll -->
-    <section class="placeholder" id="about" aria-labelledby="about-title">
-      <h2 id="about-title" class="placeholder__title reveal">About orikawa</h2>
-      <p class="placeholder__note reveal" style="--i:1">Next step: studio photo, bio, and the skill bubbles with their GIFs.</p>
+    <!-- ABOUT : photo du studio, texte, puis les compétences en bulles.
+         Au survol (ou au focus clavier) d'une bulle, son GIF apparaît au-dessus.
+         Pour ajouter le GIF : style="--gif: url(assets/…)" sur .bubble__gif.
+         Textes provisoires (à réécrire) : la phrase d'accroche, le second paragraphe et la liste des compétences. -->
+    <section class="about" id="about" aria-labelledby="about-title">
+      <div class="section-head">
+        <h2 id="about-title" class="section-head__title reveal">About</h2>
+        <p class="section-head__note reveal" style="--i:1">One studio, picture and sound under one roof.</p>
+      </div>
+
+      <div class="about__body">
+        <figure class="about__photo reveal">
+          <div class="about__frame" style="--photo: none">
+            <span class="about__placeholder" aria-hidden="true">studio photo</span>
+          </div>
+          <figcaption class="about__caption script">in the studio</figcaption>
+        </figure>
+
+        <div class="about__text">
+          <p class="about__lead reveal">Films that make complex audio tools feel simple.</p>
+          <p class="reveal" style="--i:1">orikawa makes explainer and product films for DSP and audio software makers. Picture and sound are designed together, so each film moves the way the product sounds.</p>
+          <p class="reveal" style="--i:2">[A few lines about you: background, how you work, where you are based.]</p>
+
+          <h3 class="about__skills-title reveal" style="--i:3">What I do</h3>
+          <ul class="skills reveal" style="--i:4">
+            <li class="bubble" tabindex="0" data-cursor="link">Motion design<span class="bubble__gif" aria-hidden="true"></span></li>
+            <li class="bubble" tabindex="0" data-cursor="link">Sound design<span class="bubble__gif" aria-hidden="true"></span></li>
+            <li class="bubble" tabindex="0" data-cursor="link">Explainer films<span class="bubble__gif" aria-hidden="true"></span></li>
+            <li class="bubble" tabindex="0" data-cursor="link">Product videos<span class="bubble__gif" aria-hidden="true"></span></li>
+            <li class="bubble" tabindex="0" data-cursor="link">Storyboarding<span class="bubble__gif" aria-hidden="true"></span></li>
+            <li class="bubble" tabindex="0" data-cursor="link">UI animation<span class="bubble__gif" aria-hidden="true"></span></li>
+          </ul>
+        </div>
+      </div>
     </section>
 
     <section class="placeholder" id="contact" aria-labelledby="contact-title">

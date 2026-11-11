@@ -119,7 +119,8 @@
      Ouverte par tout élément [data-film] : le bouton « See showreel » et les vignettes de Works.
      Elle lit les données du film (vidéo, titre, type, Brief, Concept, Tools) :
        - sur l'élément cliqué (data-title, data-meta, data-video…),
-       - sinon sur le projet qui le contient (<li class="work">, avec .work__name et .work__meta).
+       - sinon sur le projet qui le contient (<li class="work"> : data-*, .work__name, .work__meta,
+         et les textes affichés [data-fact="brief|concept|tools"] du film mis en avant).
      Se ferme : clic en dehors du panneau, Échap, Retour arrière, bouton Précédent du navigateur
      (on empile une entrée d'historique à l'ouverture). */
   const lightbox = document.querySelector('[data-lightbox]');
@@ -138,7 +139,8 @@
 
   function filmData(trigger) {
     const work = trigger.closest('.work');
-    const read = (key) => trigger.dataset[key] || (work && work.dataset[key]) || '';
+    const fact = (key) => (work && work.querySelector(`[data-fact="${key}"]`) ? work.querySelector(`[data-fact="${key}"]`).textContent.trim() : '');
+    const read = (key) => trigger.dataset[key] || (work && work.dataset[key]) || fact(key);
     const text = (sel) => (work && work.querySelector(sel) ? work.querySelector(sel).textContent.trim() : '');
     return {
       title: read('title') || text('.work__name'),
@@ -459,12 +461,17 @@
     cursor.setAttribute('aria-hidden', 'true');
     const svg = document.createElementNS(NS, 'svg');
     const mkPath = (cls) => { const p = document.createElementNS(NS, 'path'); p.setAttribute('class', cls); svg.appendChild(p); return p; };
-    // Ordre de dessin : échos dessous, trait principal dessus
+    // Ordre de dessin : échos dessous, puis le liseré de contraste, puis le trait principal.
+    // Le liseré (plus épais, couleur opposée) garde le trait lisible sur n'importe quel fond,
+    // par exemple sur le bouton crème « See showreel » quand la vidéo est en plein fond.
+    const halo = { el: null };
     const layers = {
       e2: { el: mkPath('cursor__echo'), lag: TRAIL[1], echo: ECHO[1] },
       e1: { el: mkPath('cursor__echo'), lag: TRAIL[0], echo: ECHO[0] },
-      main: { el: mkPath('cursor__main'), lag: 1 },
+      main: { el: null, lag: 1 },
     };
+    halo.el = mkPath('cursor__halo');
+    layers.main.el = mkPath('cursor__main');
     cursor.append(svg);
     document.body.appendChild(cursor);
 
@@ -562,6 +569,10 @@
 
         l.el.setAttribute('d', pathOf(l));
         l.el.style.opacity = l.op.toFixed(3);
+        if (name === 'main') {
+          halo.el.setAttribute('d', l.el.getAttribute('d'));
+          halo.el.style.opacity = l.op.toFixed(3);
+        }
 
         if (Math.abs(x - l.x) > 0.05 || Math.abs(y - l.y) > 0.05 || Math.abs(l.op - op) > 0.005 ||
             Math.abs(l.dx - tdx) > 0.05 || Math.abs(l.dy - tdy) > 0.05 ||

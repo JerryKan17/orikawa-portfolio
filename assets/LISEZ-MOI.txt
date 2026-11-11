@@ -1,0 +1,10 @@
+Dépose ici tes fichiers :
+
+  hero-loop.mp4        Boucle de 10 à 20 s, sans son, très compressée (MP4 H.264, 1080p)
+  hero-poster.jpg      Image affichée avant le chargement de la vidéo
+  showreel.mp4         Le showreel complet, avec le son (MP4 H.264, 1080p), lu dans la lightbox
+  showreel-poster.jpg  Image affichée dans la lightbox avant la lecture
+  logo.svg             Logo exporté de Figma (déjà copié en ligne dans index.html)
+
+Tant que hero-loop.mp4 est absent, le site affiche un dégradé animé aux couleurs de la marque.
+Tant que showreel.mp4 est absent, la lightbox affiche « coming soon ».

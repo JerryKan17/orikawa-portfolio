@@ -65,17 +65,103 @@
         <p class="hero__lede">Explainer and product videos for DSP software, picture and sound under one roof.</p>
         <div class="hero__cta">
           <span class="hero__hint" aria-hidden="true">Click to watch with sound</span>
-          <button class="btn btn--solid" type="button" data-wave data-showreel>See showreel</button>
+          <button class="btn btn--solid" type="button" data-wave data-showreel data-cursor="play" data-film
+                  data-title="Showreel" data-meta="Selected work · 2026"
+                  data-video="assets/showreel.mp4" data-poster="assets/showreel-poster.jpg"
+                  data-brief="[1–2 lines]" data-concept="[1–2 lines]" data-tools="[1–2 lines]">See showreel</button>
         </div>
       </div>
     </section>
 
-    <!-- SECTIONS À CONSTRUIRE : emplacements pour tester la navigation et l'apparition au scroll -->
-    <section class="placeholder" id="works" aria-labelledby="works-title">
-      <h2 id="works-title" class="placeholder__title reveal">Works</h2>
-      <p class="placeholder__note reveal" style="--i:1">Next step: featured film, 2×2 project grid and filters.</p>
+    <!-- WORKS : un film mis en avant, puis une grille 2 × 2, avec des filtres.
+         Chaque projet = un <li class="work">. Pour le remplir :
+           data-type     : catégories pour les filtres (explainer, product, sound), séparées par des espaces
+           data-video    : la vidéo lue dans la lightbox (avec le son)
+           data-poster   : l'image affichée avant la lecture, dans la lightbox
+           data-brief / data-concept / data-tools : les trois textes sous la vidéo (1 à 2 lignes)
+           style="--poster: url(assets/…)" sur .work__poster : l'image de la vignette
+         Le nom (.work__name) et le type (.work__meta) servent aussi de titre dans la lightbox. -->
+    <section class="works" id="works" aria-labelledby="works-title">
+      <div class="works__head">
+        <h2 id="works-title" class="works__title reveal">Works</h2>
+        <p class="works__note reveal" style="--i:1">Selected films for DSP and audio software makers.</p>
+        <div class="works__filters reveal" style="--i:2" role="group" aria-label="Filter projects">
+          <button class="chip is-active" type="button" data-filter="all" aria-pressed="true">All</button>
+          <button class="chip" type="button" data-filter="explainer" aria-pressed="false">Explainer</button>
+          <button class="chip" type="button" data-filter="product" aria-pressed="false">Product</button>
+          <button class="chip" type="button" data-filter="sound" aria-pressed="false">Sound design</button>
+        </div>
+      </div>
+
+      <ul class="works__list">
+        <li class="work work--featured reveal" data-type="product"
+            data-video="" data-poster=""
+            data-brief="[1–2 lines]" data-concept="[1–2 lines]" data-tools="[1–2 lines]">
+          <button class="work__media" type="button" data-cursor="play" data-film>
+            <span class="work__poster" style="--a: 120deg"></span>
+            <span class="sr-only">Play soothe2</span>
+          </button>
+          <div class="work__info">
+            <h3 class="work__name">soothe2</h3>
+            <p class="work__meta">Vertical product video · Concept</p>
+          </div>
+        </li>
+
+        <li class="work reveal" data-type="explainer"
+            data-video="" data-poster=""
+            data-brief="[1–2 lines]" data-concept="[1–2 lines]" data-tools="[1–2 lines]">
+          <button class="work__media" type="button" data-cursor="play" data-film>
+            <span class="work__poster" style="--a: 160deg"></span>
+            <span class="sr-only">Play Project 02</span>
+          </button>
+          <div class="work__info">
+            <h3 class="work__name">Project 02</h3>
+            <p class="work__meta">Explainer video · Motion and sound</p>
+          </div>
+        </li>
+
+        <li class="work reveal" style="--i:1" data-type="product"
+            data-video="" data-poster=""
+            data-brief="[1–2 lines]" data-concept="[1–2 lines]" data-tools="[1–2 lines]">
+          <button class="work__media" type="button" data-cursor="play" data-film>
+            <span class="work__poster" style="--a: 200deg"></span>
+            <span class="sr-only">Play Project 03</span>
+          </button>
+          <div class="work__info">
+            <h3 class="work__name">Project 03</h3>
+            <p class="work__meta">Product launch film · Motion</p>
+          </div>
+        </li>
+
+        <li class="work reveal" data-type="sound explainer"
+            data-video="" data-poster=""
+            data-brief="[1–2 lines]" data-concept="[1–2 lines]" data-tools="[1–2 lines]">
+          <button class="work__media" type="button" data-cursor="play" data-film>
+            <span class="work__poster" style="--a: 75deg"></span>
+            <span class="sr-only">Play Project 04</span>
+          </button>
+          <div class="work__info">
+            <h3 class="work__name">Project 04</h3>
+            <p class="work__meta">Sound design · Explainer</p>
+          </div>
+        </li>
+
+        <li class="work reveal" style="--i:1" data-type="sound"
+            data-video="" data-poster=""
+            data-brief="[1–2 lines]" data-concept="[1–2 lines]" data-tools="[1–2 lines]">
+          <button class="work__media" type="button" data-cursor="play" data-film>
+            <span class="work__poster" style="--a: 30deg"></span>
+            <span class="sr-only">Play Project 05</span>
+          </button>
+          <div class="work__info">
+            <h3 class="work__name">Project 05</h3>
+            <p class="work__meta">Sound design · Plugin interface</p>
+          </div>
+        </li>
+      </ul>
     </section>
 
+    <!-- SECTIONS À CONSTRUIRE : emplacements pour tester la navigation et l'apparition au scroll -->
     <section class="placeholder" id="about" aria-labelledby="about-title">
       <h2 id="about-title" class="placeholder__title reveal">About orikawa</h2>
       <p class="placeholder__note reveal" style="--i:1">Next step: studio photo, bio, and the skill bubbles with their GIFs.</p>
@@ -88,17 +174,30 @@
 
   </main>
 
-  <!-- LIGHTBOX DU SHOWREEL : ouverte par « See showreel ». Se ferme en cliquant en dehors,
-       avec Échap ou Retour arrière, ou avec le bouton Précédent du navigateur. -->
-  <div class="lightbox" data-lightbox hidden role="dialog" aria-modal="true" aria-label="Showreel">
+  <!-- LIGHTBOX : ouverte par « See showreel » et par chaque projet de Works.
+       Vidéo, puis légende (titre, type, Brief, Concept, Tools), remplies par main.js.
+       Se ferme en cliquant en dehors, avec Échap ou Retour arrière, ou avec le bouton Précédent du navigateur. -->
+  <div class="lightbox" data-lightbox data-cursor="close" hidden role="dialog" aria-modal="true" aria-labelledby="lightbox-title">
     <div class="lightbox__backdrop"></div>
     <button class="lightbox__close" type="button" data-lightbox-close>
       <span>Close</span><kbd aria-hidden="true">esc</kbd>
     </button>
-    <div class="lightbox__frame">
-      <video class="lightbox__video" src="assets/showreel.mp4" poster="assets/showreel-poster.jpg"
-             controls playsinline preload="metadata"></video>
-      <p class="lightbox__missing" hidden>The showreel is on its way.<br><span class="script">coming soon</span></p>
+    <div class="lightbox__panel" data-cursor="default">
+      <div class="lightbox__frame">
+        <video class="lightbox__video" controls playsinline preload="metadata"></video>
+        <p class="lightbox__missing" hidden>This film is on its way.<br><span class="script">coming soon</span></p>
+      </div>
+      <div class="lightbox__caption">
+        <div>
+          <h2 class="lightbox__title" id="lightbox-title" data-field="title"></h2>
+          <p class="lightbox__meta" data-field="meta"></p>
+        </div>
+        <dl class="lightbox__facts">
+          <div><dt>Brief</dt><dd data-field="brief"></dd></div>
+          <div><dt>Concept</dt><dd data-field="concept"></dd></div>
+          <div><dt>Tools</dt><dd data-field="tools"></dd></div>
+        </dl>
+      </div>
     </div>
   </div>
 

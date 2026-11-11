@@ -1,7 +1,8 @@
 /* ==========================================================================
    orikawa laurentin · styles.css
    1. Variables  2. Base  3. Header et logo  4. Vague et boutons  5. Hero
-   5b. Lightbox du showreel  6. Sections à construire  7. Footer  8. Apparition au scroll
+   5b. Lightbox (showreel et projets)  5c. Works  6. Sections à construire  7. Footer  8. Apparition au scroll
+   8b. Grain de papier  8c. Curseur
    9. Écrans étroits  10. Mouvement réduit
    ========================================================================== */
 
@@ -48,6 +49,7 @@
   --t-slow: 600ms;
   --ease-out: cubic-bezier(.22, 1, .36, 1);
   --ease-in-out: cubic-bezier(.65, 0, .35, 1);
+
 }
 
 /* 2. BASE ----------------------------------------------------------------- */
@@ -443,17 +445,19 @@ a { color: inherit; }
   text-shadow: none;
 }
 
-/* 5b. LIGHTBOX DU SHOWREEL ------------------------------------------------ */
-/* Fond nuit flouté, vidéo 16:9 centrée aussi grande que possible.
-   Ouverture : le fond apparaît, la vidéo monte et se déploie (ferme : l'inverse, plus vite). */
+/* 5b. LIGHTBOX (showreel et projets) -------------------------------------- */
+/* Fond nuit flouté. Un panneau centré : la vidéo 16:9, puis la légende en dessous
+   (titre et type à gauche, puis Brief, Concept, Tools), comme dans le wireframe.
+   Ouverture : le fond apparaît, la vidéo monte et se déploie, puis la légende suit. */
 .lightbox {
   --focus: var(--mint);
+  --cap-h: 120px; /* place réservée à la légende sous la vidéo */
   position: fixed;
   inset: 0;
   z-index: 50;
   display: grid;
   place-items: center;
-  padding: calc(var(--header-h) - 8px) var(--margin) var(--margin);
+  padding: calc(var(--header-h) - 8px) var(--margin) var(--space-8);
   color: var(--cream);
 }
 .lightbox[hidden] { display: none; }
@@ -466,9 +470,12 @@ a { color: inherit; }
   opacity: 0;
   transition: opacity var(--t-base) var(--ease-out);
 }
+.lightbox__panel {
+  position: relative;
+  width: min(100%, calc((100svh - var(--header-h) + 8px - var(--space-8) - var(--cap-h)) * 16 / 9));
+}
 .lightbox__frame {
   position: relative;
-  width: min(100%, calc((100svh - var(--header-h) - var(--margin) + 8px) * 16 / 9));
   aspect-ratio: 16 / 9;
   border-radius: var(--radius-m);
   overflow: hidden;
@@ -495,7 +502,48 @@ a { color: inherit; }
   text-align: center;
   font-size: 1.25rem;
 }
+.lightbox__missing[hidden] { display: none; }
 .lightbox__missing .script { font-size: 2rem; color: var(--mint); }
+
+/* Légende */
+.lightbox__caption {
+  display: grid;
+  grid-template-columns: 1.3fr repeat(3, 1fr);
+  gap: var(--space-8);
+  align-items: start;
+  margin-top: var(--space-6);
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity var(--t-base) var(--ease-out), transform var(--t-base) var(--ease-out);
+}
+.lightbox__title {
+  margin: 0;
+  font: 700 1.75rem/1.1 var(--font-title);
+  letter-spacing: -.01em;
+}
+.lightbox__meta {
+  margin: var(--space-2) 0 0;
+  color: rgb(255 247 221 / .65);
+  font-size: 1rem;
+  font-style: italic;
+  line-height: 1.3;
+}
+.lightbox__facts { display: contents; }
+.lightbox__facts dt {
+  margin-bottom: var(--space-1);
+  font: 700 .875rem/1.3 var(--font-title);
+}
+.lightbox__facts dd {
+  margin: 0;
+  color: rgb(255 247 221 / .7);
+  font-size: 1rem;
+  line-height: 1.35;
+  /* 1 à 2 lignes */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
 
 .lightbox__close {
   position: absolute;
@@ -537,12 +585,181 @@ a { color: inherit; }
   transition: opacity var(--t-slow) var(--ease-out) 80ms,
               transform var(--t-slow) var(--ease-out) 80ms;
 }
+.lightbox.is-open .lightbox__caption {
+  opacity: 1;
+  transform: none;
+  transition: opacity var(--t-slow) var(--ease-out) 260ms,
+              transform var(--t-slow) var(--ease-out) 260ms;
+}
 .lightbox.is-open .lightbox__close {
   opacity: 1;
   transform: none;
   transition-delay: 300ms;
 }
 .has-lightbox { overflow: hidden; }
+
+/* 5c. WORKS --------------------------------------------------------------- */
+/* En-tête (titre, note, filtres), un film mis en avant pleine largeur, puis une grille 2 × 2.
+   Chaque vignette ouvre la lightbox avec la vidéo et la légende du projet. */
+.works {
+  padding: var(--space-32) var(--margin) var(--space-24);
+  border-top: 1px solid rgb(19 21 34 / .12);
+}
+.works__head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: var(--space-4) var(--space-8);
+  margin-bottom: var(--space-12);
+}
+.works__title {
+  margin: 0;
+  font: 800 clamp(3rem, 7vw, 6rem)/.95 var(--font-title);
+  letter-spacing: -.03em;
+}
+/* Même style annotation que la note du hero */
+.works__note {
+  grid-column: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 1rem;
+  font-style: italic;
+}
+.works__note::before {
+  content: "";
+  flex: none;
+  width: 24px;
+  height: 1px;
+  background: currentColor;
+  opacity: .6;
+}
+
+/* Filtres : chips (composant du wireframe) */
+.works__filters {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: end;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+.chip {
+  padding: 9px 14px;
+  border: 1.5px solid rgb(19 21 34 / .18);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--night);
+  font: 600 .8125rem/1 var(--font-title);
+  transition: background-color var(--t-base) var(--ease-out),
+              border-color var(--t-base) var(--ease-out),
+              color var(--t-base) var(--ease-out);
+}
+.chip:hover { border-color: var(--night); }
+.chip.is-active {
+  background: var(--night);
+  border-color: var(--night);
+  color: var(--cream);
+}
+.chip:focus-visible { border-radius: var(--radius-pill); }
+
+.works__list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-16) var(--space-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.work--featured { grid-column: 1 / -1; }
+.work[hidden] { display: none; }
+
+/* Vignette : bouton qui ouvre la lightbox */
+.work__media {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-m);
+  overflow: hidden;
+  background: var(--night);
+  isolation: isolate;
+}
+.work--featured .work__media { aspect-ratio: 2 / 1; }
+.work__media:focus-visible { outline-offset: 4px; border-radius: var(--radius-m); }
+/* Image du projet : --poster: url(...) sur la vignette. En attendant, un dégradé aux couleurs de la marque. */
+.work__poster {
+  position: absolute;
+  inset: 0;
+  background: var(--poster, linear-gradient(var(--a, 115deg), var(--night) 0%, var(--blue) 45%, var(--mint) 120%)) center / cover;
+  transition: transform var(--t-slow) var(--ease-out), filter var(--t-slow) var(--ease-out);
+}
+.work__media:hover .work__poster,
+.work__media:focus-visible .work__poster { transform: scale(1.04); filter: brightness(1.08); }
+
+.work__info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-6);
+  margin-top: var(--space-4);
+}
+.work__name {
+  position: relative;
+  margin: 0;
+  font: 700 1.5rem/1.15 var(--font-title);
+  letter-spacing: -.01em;
+}
+.work--featured .work__name { font-size: 2rem; }
+.work__meta {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 1rem;
+  font-style: italic;
+}
+/* Au survol de la vignette, le nom se souligne au dégradé du hero (comme les liens du menu) */
+.work__name::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -4px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--night), var(--blue) 25%, var(--mint) 50%, var(--blue) 75%, var(--night));
+  background-size: 300% 100%;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--t-base) var(--ease-out);
+  animation: drift 3s linear infinite alternate;
+}
+.work:has(.work__media:hover) .work__name::after,
+.work:has(.work__media:focus-visible) .work__name::after { transform: scaleX(1); }
+
+/* Apparition après un changement de filtre */
+.work.is-entering { animation: work-in var(--t-slow) var(--ease-out) both; }
+@keyframes work-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
 
 /* 6. SECTIONS À CONSTRUIRE ------------------------------------------------ */
 .placeholder {
@@ -590,9 +807,74 @@ a { color: inherit; }
 }
 .js .reveal.is-in { opacity: 1; transform: none; }
 
+/* 8b. GRAIN DE PAPIER ----------------------------------------------------- */
+/* Une seule couche fixe, générée une fois par main.js (canvas, sans motif répété).
+   Placée au-dessus du header, sous la lightbox. Elle s'efface quand la vidéo passe en plein fond. */
+.grain {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 30;
+  pointer-events: none;
+  transition: opacity var(--t-slow) var(--ease-in-out);
+}
+.hero-revealed .grain { opacity: 0; }
+
+/* 8c. CURSEUR ------------------------------------------------------------- */
+/* Construit sur assets/cursor.svg (un pic de la vague du logo). Dessiné et animé par main.js :
+   voir la liste des états dans main.js, section 6. Ici : couleurs et épaisseur. */
+.has-cursor,
+.has-cursor * { cursor: none !important; }
+/* En plein écran (vidéo), on rend le curseur du système */
+.has-cursor :fullscreen,
+.has-cursor :fullscreen * { cursor: auto !important; }
+/* Certains navigateurs n'envoient aucun événement souris sur un contrôle désactivé :
+   on laisse passer la souris au travers pour que le curseur continue de suivre. */
+.has-cursor :disabled { pointer-events: none; }
+
+/* Couleurs fixes : trait principal bleu, échos toujours menthe (leur opacité est réglée dans main.js, ECHO).
+   Seule exception : sur la vidéo et dans la lightbox, le trait principal passe en crème pour rester visible. */
+.cursor {
+  --c-main: var(--blue);
+  --c-echo: var(--mint);
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  transition: opacity var(--t-base) var(--ease-out);
+}
+.cursor.is-dark { --c-main: var(--cream); }
+.cursor.is-hidden { opacity: 0; }
+
+.cursor svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.cursor path {
+  fill: none;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke var(--t-slow) var(--ease-in-out);
+}
+.cursor__main { stroke: var(--c-main); }
+.cursor__echo { stroke: var(--c-echo); }
+
 /* 9. ÉCRANS ÉTROITS (provisoire : la version téléphone viendra après) ------ */
+@media (max-width: 960px) {
+  .lightbox { --cap-h: 200px; }
+  .lightbox__caption { grid-template-columns: repeat(3, 1fr); gap: var(--space-4) var(--space-6); }
+  .lightbox__caption > :first-child { grid-column: 1 / -1; }
+}
 @media (max-width: 760px) {
   .nav a:not(.btn) { display: none; }
+  .works__head { grid-template-columns: 1fr; }
+  .works__filters { grid-column: 1; grid-row: auto; justify-content: flex-start; }
+  .works__list { grid-template-columns: 1fr; gap: var(--space-12); }
+  .work--featured .work__media { aspect-ratio: 16 / 9; }
   .hero { --foot-space: calc(var(--foot-bottom) + 110px); }
   .hero__foot { flex-direction: column; align-items: flex-start; gap: var(--space-6); }
   .hero__lede { white-space: normal; align-items: baseline; }

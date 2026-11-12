@@ -1,6 +1,6 @@
 # orikawa laurentin — site
 
-Étape 3 : hero, lightbox, Works et About. La section Contact est encore un emplacement.
+Toutes les sections sont en place : hero, Works, About, Contact, lightbox. Il reste à remplacer les contenus provisoires (voir « À faire de ton côté ») et à soigner la version téléphone.
 
 ## Ouvrir le projet dans VS Code
 
@@ -10,33 +10,40 @@
 
 ## Fichiers
 
-- `index.html` : la structure.
+- `index.html` : la structure. Chaque section commence par un commentaire qui explique comment la remplir.
 - `styles.css` : les variables en haut (couleurs, polices, espacements, durées) puis le style de chaque partie.
-- `main.js` : la vague des boutons, le titre qui remplit la largeur, la bascule du hero, la lightbox, les filtres de Works, le header, l'apparition au scroll, le grain de papier, le curseur.
+- `main.js` : la vague des boutons, le titre qui remplit la largeur, la bascule du hero, la lightbox, les filtres de Works, le header (section en cours), l'apparition au scroll, le grain de papier, le curseur, la section Contact (e-mail, grande vague), les sons.
 - `assets/` : tes vidéos et images (voir `assets/LISEZ-MOI.txt`).
 
 ## À faire de ton côté
 
-1. **Polices Adobe** : crée un « Web project » sur fonts.adobe.com avec Effra et Emily Austin, colle la balise `<link>` dans `index.html` (emplacement indiqué), puis vérifie dans `styles.css` les noms `--font-title` et `--font-script` et la graisse Heavy (800).
-   En attendant : Figtree remplace Effra, Caveat remplace Emily Austin, EB Garamond est la vraie police du corps.
-2. **Vidéos** : pour l'instant, on garde le dégradé animé. La boucle du hero (`assets/hero-loop.mp4`), le showreel (`assets/showreel.mp4`), les films des projets et le rangement des assets viendront plus tard. Tant qu'une vidéo est absente, la lightbox affiche « coming soon ».
-4. **Textes provisoires d'About** : l'accroche, le second paragraphe (entre crochets), la note sous le titre et la liste des compétences sont à réécrire. Ajoute aussi la photo du studio (`--photo`) et un GIF par bulle (`--gif`), voir la section About ci-dessous.
-5. **Projets de Works** : remplace les noms « Project 02 » à « Project 05 », les types, et les textes `[1–2 lines]` (voir la section Works ci-dessous). Même chose pour les textes du showreel, sur le bouton « See showreel ».
-3. **Vague des boutons** : modifie `ZIGZAG` dans `main.js` ou remplace `makeWave()` par la vague exportée de Figma.
+1. **Polices Adobe** : vérifie dans `styles.css` les noms `--font-title` et `--font-script` et la graisse Heavy (800) d'Effra.
+2. **Vidéos** : pour l'instant, on garde le dégradé animé. La boucle du hero (`assets/hero-loop.mp4`), le showreel (`assets/showreel.mp4`) et les films des projets viendront plus tard. Tant qu'une vidéo est absente, la lightbox affiche « coming soon ».
+3. **Works** : remplace les noms « Project 02 » à « Project 05 », les types, la description (lorem ipsum) du film mis en avant et les textes `[1–2 lines]` de la lightbox. Même chose pour les textes du showreel, sur le bouton « See showreel ».
+4. **Filtres de Works** : « All », « DSP », « Music » et « Other ». Range chaque projet dans sa ou ses catégories avec `data-type` (voir la section Works ci-dessous).
+5. **About** : la note sous le titre, l'accroche, le lorem ipsum et la liste des compétences sont à réécrire. Ajoute la photo du studio (`--photo`) et un GIF par bulle (`--gif`).
+6. **Contact** : remplace `hello@example.com` (3 endroits dans la section : `href`, `data-copy` et le texte affiché). Les liens Instagram et WhatsApp seront ajoutés plus tard.
+7. **Sons** : crée les fichiers listés dans `assets/sounds/LISTE-DES-SONS.md` (noms, déclencheurs, durées, intentions) et dépose-les dans `assets/sounds/`.
+8. **Vague des boutons** : modifie `ZIGZAG` dans `main.js` ou remplace `makeWave()` par la vague exportée de Figma.
 
 ## Direction artistique (telle qu'appliquée dans le code)
 
-- **Couleurs** : crème `#FFF7DD` (fond), nuit `#131522` (texte), bleu `#323A72` (texte secondaire), menthe `#29E3BE` (accent, uniquement sur fond foncé). Jaune et magenta : sur la planche, pas encore utilisés.
-- **Typographies** : Effra (titres, boutons, interface), EB Garamond (corps de texte, note du hero en italique), Emily Austin (touche manuscrite, rappel vers laurentinriviere.com).
-- **Motif** : la vague à 3 traits du logo (nuit, bleu, menthe), reprise sous les boutons au survol.
-- **Formes** : pastilles (boutons), coins arrondis 16 px pour les médias, et le pic Λ de la vague (`assets/cursor.svg`) pour le curseur.
-- **Matière** : grain de papier léger et fixe (il ne bouge pas au défilement), sans motif répété : il est tiré au hasard une fois au chargement, à plusieurs échelles (grain fin, petites taches, nuages très doux, fibres sombres et claires). Il couvre les fonds crème et s’efface sur la vidéo ; la lightbox passe par-dessus. Réglages : objet `GRAIN` dans `main.js` (section 5).
-- **Curseur** : construit sur `assets/cursor.svg`, un pic de la vague du logo. La pointe est le point cliqué ; au repos, le pic est incliné comme une flèche de souris classique. Couleurs fixes : un trait principal bleu (crème seulement sur la vidéo et dans la lightbox, pour rester visible) et deux échos toujours menthe, l'un à 80 %, l'autre à 40 %. Sous le trait principal, un liseré de contraste (crème sur fond clair, nuit sur fond foncé) le garde lisible sur n'importe quel fond, par exemple sur le bouton crème « See showreel ». En mouvement, les échos traînent derrière, puis se replient sous le trait à l'arrêt. Pas de texte à côté du curseur. Seulement avec une souris : sur tactile, rien ne change.
+- **Couleurs** : crème `#FFF7DD` (fond), sable `#F6EAC4` (fond d'About), nuit `#131522` (texte, fond de Contact et du footer), bleu `#323A72` (texte secondaire), menthe `#29E3BE` (accent). Jaune et magenta : sur la planche, pas encore utilisés.
+- **Passage d'une section à l'autre** : Works sur crème, About glisse doucement vers le sable, puis tout en bas du sable vers la nuit (en passant par le bleu) pour amener Contact. Pas de filet entre les sections.
+- **Typographies** : Effra (titres, boutons, interface), EB Garamond (corps de texte, annotations en italique), Emily Austin (touches manuscrites).
+- **Annotations** : petites phrases en italique, couleur douce, sans trait devant (note du hero, notes sous les titres de section).
+- **Motif** : la vague à 3 traits du logo (menthe, bleu, nuit) :
+  - sous les boutons au survol ;
+  - en fines bandes qui défilent lentement entre les sections (bords en fondu ; version claire sur fond foncé) ;
+  - en grand, en bas de la section Contact (voir plus bas).
+- **Formes** : pastilles (boutons, filtres, bulles), coins arrondis 8 et 16 px pour les médias, et le pic Λ de la vague (`assets/cursor.svg`) pour le curseur.
+- **Matière** : grain de papier léger et fixe, sans motif répété, tiré au hasard une fois au chargement. Il couvre les fonds clairs et s'efface sur la vidéo du hero et sur les sections foncées. Réglages : objet `GRAIN` dans `main.js` (section 5).
+- **Curseur** : construit sur `assets/cursor.svg`, un pic de la vague du logo. La pointe est le point cliqué ; au repos, le pic est incliné comme une flèche de souris classique. Trait principal bleu (crème sur la vidéo, dans la lightbox et sur les sections foncées), deux échos toujours menthe (80 % et 40 %), et un liseré de contraste qui le garde lisible sur n'importe quel fond. En mouvement, les échos traînent derrière. Seulement avec une souris.
 
 | État | Quand | Rendu |
 |---|---|---|
 | default | partout | le pic incliné |
-| link | liens | le pic se déplie en vague |
+| link | liens, bulles d'About | le pic se déplie en vague |
 | button | boutons | le pic droit avec ses trois traits, comme dans le logo |
 | play | « See showreel », vignettes de Works | le pic couché devient ▷, suivi de ses deux échos |
 | close | dans la lightbox, en dehors du panneau | un pic et son reflet forment une croix |
@@ -45,47 +52,67 @@
 | pressed | pendant le clic | le pic s'écrase |
 | hidden | souris hors de la fenêtre | fondu |
 
-Pour forcer un état sur un élément : `data-cursor="play"` (ou `close`, `default`). Réglages dans `main.js` (section 6) : `TILT` (inclinaison au repos), `ECHO` (opacité des échos), `TRAIL` (retard des échos), `MORPH` (vitesse de transformation), `GAP` (écart entre les traits), `SHAPES` et `STATES` (formes de chaque état).
+Pour forcer un état sur un élément : `data-cursor="play"` (ou `close`, `link`, `default`). Réglages dans `main.js` (section 6) : `TILT`, `ECHO`, `TRAIL`, `MORPH`, `GAP`, `SHAPES` et `STATES`.
+
+## Sons
+
+Tous les sons de l'interface sont branchés dans `main.js` (moteur en section 0, déclencheurs en section 8). Ils sont coupés par défaut : le visiteur les active avec le bouton « vague » du header, à gauche de « Start a project » (traits à plat quand le son est coupé, qui ondulent comme un égaliseur quand il est actif). Son choix est mémorisé. Un fichier absent est ignoré. Les vidéos ne dépendent pas de ce bouton.
+
+Réglages : objet `SOUNDS` (volume de chaque son, délai minimum entre deux lectures) et `MASTER` (volume général). La liste à créer : `assets/sounds/LISTE-DES-SONS.md`.
+
+## Header
+
+- Fond crème dès que la page défile, filet une fois le hero passé.
+- Le lien de la section en cours (Works, About, Contact) garde un soulignement discret.
+- Sur les sections foncées (Contact, footer : `data-theme="dark"`), le header passe en nuit avec un texte crème.
 
 ## Works
 
-Version dense : un film mis en avant (vignette à gauche, nom, type, Brief, Concept, Tools et bouton « Play the film » à droite), puis les autres projets en petites vignettes, 4 par ligne (2 sous 1080 px). Filtres en chips (All, Explainer, Product, Sound design). Chaque vignette ouvre la lightbox : la vidéo, puis la légende du wireframe (nom et type à gauche, puis Brief, Concept, Tools).
+Un film mis en avant (vignette à gauche ; à droite le nom, le type, une courte description et le bouton « Play the film »), puis les autres projets en petites vignettes, 4 par ligne (2 sous 1080 px). Filtres en chips : All, DSP, Music, Other. Chaque vignette ouvre la lightbox : la vidéo, puis la légende (nom et type, puis Brief, Concept, Tools).
 
 Chaque projet est un `<li class="work">` dans `index.html` :
 - `.work__name` et `.work__meta` : le nom et le type, affichés sous la vignette et repris dans la lightbox ;
-- `data-type` : les catégories pour les filtres (`explainer`, `product`, `sound`), séparées par des espaces ;
+- `.work__desc` (film mis en avant seulement) : la courte description ;
+- `data-type` : les catégories pour les filtres (`dsp`, `music`, `other`), séparées par des espaces ;
 - `data-video` et `data-poster` : la vidéo de la lightbox (avec le son) et son image d'attente ;
-- `data-brief`, `data-concept`, `data-tools` : les trois textes de la légende (1 à 2 lignes). Pour le film mis en avant, ces textes sont écrits directement dans ses `<dd data-fact="…">`, visibles sur la page ;
+- `data-brief`, `data-concept`, `data-tools` : les trois textes de la légende de la lightbox (1 à 2 lignes) ;
 - `style="--poster: url(assets/…)"` sur `.work__poster` : l'image de la vignette (en attendant, un dégradé aux couleurs de la marque).
 
-Pour ajouter un filtre : un bouton `<button class="chip" data-filter="motcle">`, et `motcle` dans le `data-type` des projets concernés.
+Pour ajouter un filtre : un bouton `<button class="chip" type="button" data-filter="motcle" aria-pressed="false">Mot clé</button>` à côté des autres, et `motcle` dans le `data-type` des projets concernés.
 
 ## About
 
-Même en-tête que Works (titre et note en annotation). Photo du studio à gauche, avec une légende manuscrite ; à droite, une accroche, le texte, puis les compétences en bulles. Au survol ou au focus clavier d'une bulle, son GIF apparaît au-dessus.
-- Photo : `style="--photo: url(assets/…)"` sur `.about__frame` (format 4:5), puis retire le texte « studio photo ».
+Une seule colonne centrée, à une largeur de lecture confortable : photo du studio (3:2) avec une légende manuscrite, accroche, texte, puis les compétences en bulles. Au survol ou au focus clavier d'une bulle, son GIF apparaît au-dessus.
+- Photo : `style="--photo: url(assets/…)"` sur `.about__frame`, puis retire le texte « studio photo ».
 - GIF d'une bulle : `style="--gif: url(assets/…)"` sur son `.bubble__gif` (format 4:3).
 - Ajouter une compétence : copie une ligne `<li class="bubble">`.
 
+## Contact
+
+Dernière section, sur fond nuit : grand titre « Let's unfold / your next film. » (la seconde ligne en dégradé menthe et crème), une phrase, le bouton « Start a project » (ouvre la messagerie) et l'adresse e-mail, qui se copie au clic (« copy » devient « copied »).
+
+L'effet : la vague du logo, en grand, en bas de la section (dessinée en canvas par `main.js`, section 7) :
+- à l'arrivée sur la section, elle se déplie depuis une ligne plate ;
+- elle ondule doucement en permanence ;
+- sous la souris, elle s'amplifie localement ;
+- un clic dans la section y lance une onde qui part vers les côtés.
+
+Elle ne tourne que lorsque la section est visible ; avec le mouvement réduit, elle reste fixe. Réglages : objet `WAVE` dans `main.js`.
+
 ## Logo
 
-Le logo du header est une copie en ligne de `assets/logo.svg`, dans `index.html`, pour que ses couleurs suivent le header (crème sur la vidéo). Si tu modifies le logo, ré-exporte le SVG puis recopie les tracés dans `index.html`.
+Le logo du header est une copie en ligne de `assets/logo.svg`, dans `index.html`, pour que ses couleurs suivent le header (crème sur la vidéo et sur les sections foncées). Si tu modifies le logo, ré-exporte le SVG puis recopie les tracés dans `index.html`.
 
 ## Ce qui est une proposition (à valider)
 
-- Hauteur du header 88 px. Fond crème légèrement translucide dès que la page défile, filet une fois le hero passé.
-- Entrée du titre au chargement : chaque ligne monte, se révèle (flou → net) et se resserre, l'une après l'autre ; la note et le bouton suivent en fondu.
-- Lightbox (showreel et projets) : fond nuit flouté, vidéo 16:9 la plus grande possible avec la légende dessous. Se ferme en cliquant en dehors, avec Échap, Retour arrière ou le bouton Précédent du navigateur.
-- Appel vers Works dans le bas du hero : « Explore works » et une flèche qui descend doucement (pointe avec un écho menthe). Au survol, le texte se souligne au dégradé du hero ; il s'efface quand la vidéo passe en plein fond, comme la note.
-- Works : film mis en avant avec ses infos à côté, autres projets en petites vignettes 16:9 sur 4 colonnes, nom souligné au dégradé du hero au survol de la vignette.
-- About : photo 4:5 à gauche, texte à droite, bulles de compétences avec aperçu GIF au survol.
-- Soulignement des liens de navigation au survol, aux couleurs du dégradé du hero.
+- Couleurs des sections (crème, sable, nuit) et passage en dégradé entre elles.
+- Bandes de vague entre Works et About, et dans le passage vers Contact.
+- Entrée du titre au chargement : chaque ligne monte, se révèle (flou → net) et se resserre.
+- Lightbox : fond nuit flouté, vidéo 16:9 la plus grande possible avec la légende dessous. Se ferme en cliquant en dehors, avec Échap, Retour arrière ou le bouton Précédent du navigateur.
+- Appel « Explore works » avec une flèche qui descend doucement, dans le bas du hero.
 - Boutons : petits et texte centré au repos, la pastille s'agrandit vers le bas au survol pour laisser la place à la vague.
-- Titre du hero : au plus 86 % de la largeur utile (`TITLE_WIDTH` dans `main.js`), centré entre le header et le bas du hero.
 - Durées : 150 ms, 250 ms, 600 ms. Apparition au scroll : montée de 24 px, décalage de 80 ms.
-- Zoom de la vidéo de 1,06 vers 1 au survol du showreel.
-- Couleurs jaune et magenta : présentes sur ta planche, non utilisées pour l'instant.
 
 ## Prochaines étapes
 
-Contenus réels (projets, textes, photo, GIF) > Contact et footer > finitions > version téléphone.
+Contenus réels (projets, textes, photo, GIF, e-mail) > liens Instagram et WhatsApp > version téléphone (à tester sur un vrai téléphone).

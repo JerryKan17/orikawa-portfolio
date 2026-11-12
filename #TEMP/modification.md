@@ -1,10 +1,21 @@
-rajoute un call to action, une flèche dirigeant vers les travaux, intègre la harmonieusement
+ajoute des vagues de manière stylistique, design, peut être animée, mais simple pour ne pas surcharger le site web.
+
+Pour les annotations en début et fin de sections, style "Explainer and product videos for DSP software, picture and sound under one roof", enlève le trait avant le texte, ça fait ai slop
+
+Pour la section works : deuxi choses
+
+* plutot que de recopier la section info/metadata de la video pour le featured film, ajouter plutot une courte description
+* Pour le systeme de tag, je pensais plutot a "All" et les catégorie suivante : DSP,
 
 
-Je trouve que la grille et les vignette prennent trop de place dans la présentation des travaux. Réduit leurs tailles de sorte a afficher les info plus densément. tu peux t'écarter de wireframe.
+Entre les sections, pour bien les distinguer, change de couleur, je ne sais pas trop comment, respecte la DA et fait un changement smooth (dégradé peut être ? Je te laisse décider)
+
+Au passage, fait en sorte que lorsqu'on scroll dans le site web, le header affiche subtilement d'une manière dans quelle section on est
+
+Dans la section about, plutot que d'avoir une flexbox entre la photo et le texte, centre le tout dans des proportion de lecture raisonnable et met un lorem ipsum de taille convenable pour la description
 
 
-Probleme de lisibilité sur le curseur quand il s'affiche par dessus un fond clair comme le bouton du see showreel
+Enfin, fait la dernière section, n'ajoute pas encore de lien vers des réseau sociaux ('insta, whats'app) ça sera ajouté plus tard. ajoute une anime effet wow pour eviter la redondance dans cette section.
 
 
-Ajoute si il te reste assez d'usage la section suivante
+Merci :D

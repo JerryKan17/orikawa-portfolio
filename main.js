@@ -1,10 +1,64 @@
 /* orikawa laurentin · main.js
    1. Vague des boutons   2. Hero (titre ajusté, bascule au survol)   2b. Lightbox   2c. Filtres de Works
-   3. Header   4. Apparition au scroll   5. Grain de papier   6. Curseur */
+   3. Header (section en cours)   4. Apparition au scroll   5. Grain de papier   6. Curseur
+   7. Contact (e-mail, grande vague)   8. Sons (bouton, survols, clics, nappe de Contact)
+   Le moteur de sons (0) est en haut pour que toutes les sections puissent l'appeler. */
 (() => {
   'use strict';
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  /* 0. SONS : MOTEUR -----------------------------------------------------------
+     Les fichiers vont dans assets/sounds/, au nom indiqué ici (+ .mp3).
+     Liste complète et consignes : assets/sounds/LISTE-DES-SONS.md.
+     Coupés par défaut : le visiteur les active avec le bouton du header (choix mémorisé).
+     Un fichier absent est simplement ignoré : on peut ajouter les sons au fur et à mesure.
+     volume : de 0 à 1 (multiplié par MASTER) · throttle : délai minimum entre deux lectures (ms) */
+  const SOUND_DIR = 'assets/sounds/';
+  const MASTER = 0.8;
+  const SOUNDS = {
+    'toggle-on':     { volume: 0.6 },
+    'toggle-off':    { volume: 0.5 },
+    'ui-hover':      { volume: 0.18, throttle: 60 },
+    'ui-click':      { volume: 0.4 },
+    'hero-reveal':   { volume: 0.5 },
+    'hero-unreveal': { volume: 0.3 },
+    'lightbox-open': { volume: 0.55 },
+    'lightbox-close':{ volume: 0.45 },
+    'filter':        { volume: 0.4 },
+    'card-hover':    { volume: 0.25, throttle: 90 },
+    'bubble-1':      { volume: 0.35 },
+    'bubble-2':      { volume: 0.35 },
+    'bubble-3':      { volume: 0.35 },
+    'bubble-4':      { volume: 0.35 },
+    'bubble-5':      { volume: 0.35 },
+    'bubble-6':      { volume: 0.35 },
+    'wave-pluck':    { volume: 0.5, throttle: 80 },
+    'copy':          { volume: 0.5 },
+    'contact-drone': { volume: 0.22 }, // nappe en boucle (voir section 8)
+  };
+  const sfx = { on: false, cache: {}, missing: new Set(), last: {} };
+
+  function loadSound(name) {
+    if (!sfx.cache[name]) {
+      const a = new Audio(SOUND_DIR + name + '.mp3');
+      a.preload = 'auto';
+      a.addEventListener('error', () => sfx.missing.add(name), { once: true });
+      sfx.cache[name] = a;
+    }
+    return sfx.cache[name];
+  }
+
+  function playSound(name) {
+    const def = SOUNDS[name];
+    if (!sfx.on || !def || sfx.missing.has(name)) return;
+    const now = performance.now();
+    if (def.throttle && now - (sfx.last[name] || 0) < def.throttle) return;
+    sfx.last[name] = now;
+    const a = loadSound(name).cloneNode(); // une copie par lecture : les sons peuvent se superposer
+    a.volume = Math.min(1, def.volume * MASTER);
+    a.play().catch(() => {});
+  }
 
   /* 1. VAGUE DES BOUTONS --------------------------------------------------
      Zigzag de 3 traits, injecté dans chaque bouton portant [data-wave] :
@@ -82,9 +136,10 @@
 
   // Bascule : vidéo à travers le texte (repos) <-> vidéo en plein fond (survol de « See showreel »)
   let revealed = false;
-  function setReveal(on) {
+  function setReveal(on, silent) {
     if (on === revealed) return;
     revealed = on;
+    if (!silent) playSound(on ? 'hero-reveal' : 'hero-unreveal');
     hero.classList.toggle('is-reveal', on);
     document.documentElement.classList.toggle('hero-revealed', on); // efface le grain sur la vidéo
     syncHeader();
@@ -119,8 +174,7 @@
      Ouverte par tout élément [data-film] : le bouton « See showreel » et les vignettes de Works.
      Elle lit les données du film (vidéo, titre, type, Brief, Concept, Tools) :
        - sur l'élément cliqué (data-title, data-meta, data-video…),
-       - sinon sur le projet qui le contient (<li class="work"> : data-*, .work__name, .work__meta,
-         et les textes affichés [data-fact="brief|concept|tools"] du film mis en avant).
+       - sinon sur le projet qui le contient (<li class="work"> : data-*, .work__name, .work__meta).
      Se ferme : clic en dehors du panneau, Échap, Retour arrière, bouton Précédent du navigateur
      (on empile une entrée d'historique à l'ouverture). */
   const lightbox = document.querySelector('[data-lightbox]');
@@ -139,8 +193,7 @@
 
   function filmData(trigger) {
     const work = trigger.closest('.work');
-    const fact = (key) => (work && work.querySelector(`[data-fact="${key}"]`) ? work.querySelector(`[data-fact="${key}"]`).textContent.trim() : '');
-    const read = (key) => trigger.dataset[key] || (work && work.dataset[key]) || fact(key);
+    const read = (key) => trigger.dataset[key] || (work && work.dataset[key]) || '';
     const text = (sel) => (work && work.querySelector(sel) ? work.querySelector(sel).textContent.trim() : '');
     return {
       title: read('title') || text('.work__name'),
@@ -178,7 +231,8 @@
     lbReturnFocus = trigger || document.activeElement;
     clearTimeout(lbHideTimer);
 
-    setReveal(false);
+    setReveal(false, true);
+    playSound('lightbox-open');
     video.pause(); // la boucle du hero se met en pause pendant la lecture
     document.body.classList.add('has-lightbox');
     pageParts.forEach((el) => { if (el) el.inert = true; });
@@ -192,6 +246,7 @@
     history.pushState({ film: true }, '');
     lbInHistory = true;
     document.dispatchEvent(new Event('cursor:refresh'));
+    document.dispatchEvent(new Event('sound:update'));
   }
 
   function closeLightbox(fromHistory) {
@@ -200,6 +255,7 @@
     lbToken++;
 
     lightbox.classList.remove('is-open');
+    playSound('lightbox-close');
     lbVideo.pause();
     document.body.classList.remove('has-lightbox');
     pageParts.forEach((el) => { if (el) el.inert = false; });
@@ -219,6 +275,7 @@
     if (lbReturnFocus && lbReturnFocus.focus) lbReturnFocus.focus({ preventScroll: true });
     lbReturnFocus = null;
     document.dispatchEvent(new Event('cursor:refresh'));
+    document.dispatchEvent(new Event('sound:update'));
   }
 
   document.querySelectorAll('[data-film]').forEach((el) => {
@@ -245,6 +302,7 @@
   filterBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
       const f = btn.dataset.filter;
+      playSound('filter');
       filterBtns.forEach((b) => {
         const on = b === btn;
         b.classList.toggle('is-active', on);
@@ -266,19 +324,38 @@
     });
   });
 
-  /* 3. HEADER -------------------------------------------------------------- */
+  /* 3. HEADER ----------------------------------------------------------------
+     - fond dès le début du défilement, filet une fois le hero passé ;
+     - le lien de la section en cours garde un soulignement discret ;
+     - sur une section foncée (data-theme="dark" : Contact, footer), le header passe en nuit
+       et le grain de papier s'efface. */
+  const navLinks = Array.from(document.querySelectorAll('.nav a:not(.btn)'));
+  const tracked = [hero, ...document.querySelectorAll('main > section:not(.hero)'), document.querySelector('.site-footer')].filter(Boolean);
   function syncHeader() {
     const y = window.scrollY;
-    const past = y > hero.offsetHeight - header.offsetHeight;
-    header.classList.toggle('is-scrolled', y > 4);   // fond dès le début du défilement
-    header.classList.toggle('is-solid', past);       // filet une fois le hero passé
+    const line = header.offsetHeight; // la ligne juste sous le header
+    const past = y > hero.offsetHeight - line;
+    const current = tracked.find((s) => { const r = s.getBoundingClientRect(); return r.top <= line && r.bottom > line; });
+    const dark = !!current && current.dataset.theme === 'dark';
+
+    header.classList.toggle('is-scrolled', y > 4);
+    header.classList.toggle('is-solid', past && !dark);
+    header.classList.toggle('is-dark-section', dark);
     header.classList.toggle('is-on-dark', revealed && !past);
+    document.documentElement.classList.toggle('in-dark-section', dark);
+
+    navLinks.forEach((a) => {
+      const on = !!current && !!current.id && a.getAttribute('href') === '#' + current.id;
+      a.classList.toggle('is-current', on);
+      if (on) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
+    });
   }
   let scrollFrame = 0;
   window.addEventListener('scroll', () => {
     cancelAnimationFrame(scrollFrame);
     scrollFrame = requestAnimationFrame(syncHeader);
   }, { passive: true });
+  window.addEventListener('resize', syncHeader);
   syncHeader();
 
   /* 4. APPARITION AU SCROLL ------------------------------------------------ */
@@ -406,6 +483,7 @@
        text     : un pic très étroit, comme un curseur de texte
        disabled : la vague à plat (pas de signal)
        clic     : le pic s'écrase légèrement
+     Couleurs claires sur la vidéo, dans la lightbox et sur les sections data-theme="dark".
      Sur un élément : data-cursor="play|close|default" force l'état.
      Uniquement avec une souris : le tactile garde son comportement normal. */
   const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
@@ -506,7 +584,9 @@
       return { state: 'default' };
     }
 
-    const isDark = () => lbOpen || (revealed && y < hero.getBoundingClientRect().bottom);
+    const DARK_ZONE = '[data-theme="dark"], .site-header.is-dark-section';
+    const isDark = (target) => lbOpen || (revealed && y < hero.getBoundingClientRect().bottom) ||
+      !!(target && target.closest && target.closest(DARK_ZONE));
 
     // Les contrôles désactivés laissent passer la souris (voir styles.css) : on les repère par leur position
     function overDisabled() {
@@ -520,7 +600,7 @@
     function update(target) {
       const found = overDisabled() ? { state: 'disabled' } : stateFor(target);
       const next = STATES[found.state] ? found.state : 'default';
-      const dark = isDark();
+      const dark = isDark(target);
       if (next === state && dark === cursor.classList.contains('is-dark')) return;
       state = next;
       cursor.dataset.state = state;
@@ -625,4 +705,234 @@
       }
     });
   }
+
+  /* 7. CONTACT : E-MAIL ET GRANDE VAGUE ---------------------------------------- */
+  // L'adresse e-mail se copie au clic (« copy » devient « copied »).
+  // Si la copie est impossible, on ouvre le logiciel de messagerie à la place.
+  document.querySelectorAll('[data-copy]').forEach((btn) => {
+    const label = btn.querySelector('.contact__copy');
+    let timer = 0;
+    btn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(btn.dataset.copy);
+        label.textContent = 'copied';
+        playSound('copy');
+        clearTimeout(timer);
+        timer = setTimeout(() => { label.textContent = 'copy'; }, 1800);
+      } catch (err) {
+        window.location.href = 'mailto:' + btn.dataset.copy;
+      }
+    });
+  });
+
+  /* La vague du logo, en grand, en bas de la section Contact (canvas).
+     - à l'arrivée sur la section, elle se déplie depuis une ligne plate ;
+     - elle ondule doucement en permanence ;
+     - sous la souris, elle s'amplifie localement ;
+     - un clic dans la section y lance une onde qui part vers les côtés.
+     Elle ne tourne que lorsque la section est visible. Mouvement réduit : dessin fixe.
+     Réglages : WAVE ci-dessous. */
+  const WAVE = {
+    period: 112,     // largeur d'un aller-retour du zigzag (px)
+    gap: 12,         // écart entre les trois traits
+    bottom: 120,     // distance entre la vague et le bas de la section
+    base: 12,        // amplitude au repos
+    hover: 64,       // amplitude ajoutée sous la souris
+    radius: 240,     // largeur de la zone amplifiée sous la souris
+    pulse: 48,       // amplitude de l'onde lancée par un clic
+    speed: 0.32,     // vitesse de défilement
+    lines: [         // du haut vers le bas, comme le logo : menthe, puis crème
+      'rgba(41,227,190,.9)',
+      'rgba(255,247,221,.4)',
+      'rgba(255,247,221,.85)',
+    ],
+  };
+  const contact = document.querySelector('.contact');
+  if (contact) initWaves(contact);
+
+  function initWaves(section) {
+    const canvas = section.querySelector('.contact__waves');
+    const ctx = canvas.getContext('2d');
+    const still = () => reduceMotion.matches;
+    let W = 0, H = 0;
+    let visible = false, frame = 0, last = 0;
+    let phase = 0, intro = 0, hover = 0, px = 0, targetX = 0, inside = false;
+    let pulses = [];
+
+    // Zigzag de -1 à 1 (même forme que la vague du logo)
+    const tri = (u) => 1 - 4 * Math.abs(Math.round(u) - u);
+
+    function resize() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = section.clientWidth;
+      H = section.clientHeight;
+      canvas.width = Math.round(W * dpr);
+      canvas.height = Math.round(H * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (!px) px = targetX = W * 0.6;
+      if (still() || !frame) draw(performance.now());
+    }
+
+    function draw(now) {
+      const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
+      last = now;
+      const t = now / 1000;
+      if (still()) { intro = 1; hover = 0; pulses = []; }
+      else {
+        phase += dt * WAVE.speed;
+        intro = Math.min(1, intro + dt / 1.8);
+        hover += ((inside ? 1 : 0) - hover) * 0.06;
+        px += (targetX - px) * 0.12;
+        pulses = pulses.filter((p) => now - p.t < 2400);
+      }
+      const unfold = 1 - Math.pow(1 - intro, 3);
+      const baseY = H - WAVE.bottom;
+
+      ctx.clearRect(0, 0, W, H);
+      ctx.lineWidth = 2;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+
+      // Les sommets du zigzag (tous les demi-aller-retour), décalés par le défilement
+      const half = WAVE.period / 2;
+      const offset = ((phase * WAVE.period) % half + half) % half;
+      const xs = [];
+      for (let x = -half + offset; x <= W + half; x += half) xs.push(x);
+
+      const amps = xs.map((x) => {
+        let a = WAVE.base * (1 + 0.3 * Math.sin(t * 0.9 + x / 380));
+        a += WAVE.hover * hover * Math.exp(-(((x - px) / WAVE.radius) ** 2));
+        pulses.forEach((p) => {
+          const age = (now - p.t) / 1000;
+          const ring = Math.abs(x - p.x) - age * 560;
+          a += WAVE.pulse * Math.exp(-((ring / 90) ** 2)) * Math.max(0, 1 - age / 2.4);
+        });
+        return a * unfold;
+      });
+
+      WAVE.lines.forEach((color, i) => {
+        ctx.strokeStyle = color;
+        ctx.beginPath();
+        xs.forEach((x, k) => {
+          const y = baseY + (i - 1) * WAVE.gap + amps[k] * tri(x / WAVE.period - phase);
+          if (k) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+        });
+        ctx.stroke();
+      });
+    }
+
+    function loop(now) {
+      draw(now);
+      frame = visible && !still() ? requestAnimationFrame(loop) : 0;
+    }
+    const start = () => { if (!frame && visible && !still()) { last = 0; frame = requestAnimationFrame(loop); } };
+
+    new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      if (visible) start();
+    }, { threshold: 0 }).observe(section);
+
+    if ('ResizeObserver' in window) new ResizeObserver(resize).observe(section);
+    else window.addEventListener('resize', resize);
+    resize();
+
+    section.addEventListener('pointermove', (e) => {
+      const r = section.getBoundingClientRect();
+      targetX = e.clientX - r.left;
+      inside = true;
+    });
+    section.addEventListener('pointerleave', () => { inside = false; });
+    section.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('a, button')) return;
+      const r = section.getBoundingClientRect();
+      pulses.push({ x: e.clientX - r.left, t: performance.now() });
+      playSound('wave-pluck');
+      start();
+    });
+    reduceMotion.addEventListener('change', () => { if (still()) draw(performance.now()); else start(); });
+  }
+
+  /* 8. SONS : BOUTON, SURVOLS, CLICS, NAPPE DE CONTACT ---------------------------
+     Bouton du header [data-sound-toggle] : active / coupe les sons (choix mémorisé dans le navigateur).
+     Les vidéos (hero, lightbox) ne dépendent pas de ce bouton : le film de la lightbox garde son propre son. */
+  const soundToggle = document.querySelector('[data-sound-toggle]');
+  const STORE_KEY = 'orikawa-sound';
+
+  function setSound(on) {
+    sfx.on = on;
+    document.documentElement.classList.toggle('sound-on', on);
+    if (soundToggle) {
+      soundToggle.setAttribute('aria-pressed', String(on));
+      soundToggle.title = on ? 'Sound on' : 'Sound off';
+    }
+    try { localStorage.setItem(STORE_KEY, on ? 'on' : 'off'); } catch (err) { /* stockage indisponible */ }
+    if (on) Object.keys(SOUNDS).forEach((name) => { if (name !== 'contact-drone') loadSound(name); });
+    updateDrone();
+  }
+
+  if (soundToggle) {
+    soundToggle.addEventListener('click', () => {
+      if (sfx.on) { playSound('toggle-off'); setSound(false); }
+      else { setSound(true); playSound('toggle-on'); }
+    });
+  }
+
+  // Survols : un son par élément survolé (vignette, bulle de compétence, ou lien / bouton)
+  let hoverEl = null;
+  document.addEventListener('pointerover', (e) => {
+    if (e.pointerType !== 'mouse') return;
+    const el = e.target.closest('.work__media, .bubble, a[href], button');
+    if (el === hoverEl) return;
+    hoverEl = el;
+    if (!el || el.matches('[data-showreel]')) return; // « See showreel » a son propre son (hero-reveal)
+    if (el.matches('.work__media')) playSound('card-hover');
+    else if (el.matches('.bubble')) playSound('bubble-' + ((Array.from(el.parentElement.children).indexOf(el) % 6) + 1));
+    else playSound('ui-hover');
+  });
+
+  // Clics : son générique, sauf pour les éléments qui ont le leur
+  const OWN_SOUND = '[data-film], [data-filter], [data-copy], [data-sound-toggle], [data-lightbox-close]';
+  document.addEventListener('click', (e) => {
+    const el = e.target.closest('a[href], button');
+    if (el && !el.closest(OWN_SOUND)) playSound('ui-click');
+  });
+
+  // Nappe de la section Contact : monte doucement quand la section est à l'écran, redescend sinon
+  let drone = null, droneVol = 0, droneTarget = 0, droneTimer = 0, contactSeen = false;
+  function updateDrone() {
+    const want = sfx.on && contactSeen && !lbOpen && !sfx.missing.has('contact-drone');
+    droneTarget = want ? Math.min(1, SOUNDS['contact-drone'].volume * MASTER) : 0;
+    if (want && !drone) {
+      drone = new Audio(SOUND_DIR + 'contact-drone.mp3');
+      drone.loop = true;
+      drone.volume = 0;
+      drone.addEventListener('error', () => { sfx.missing.add('contact-drone'); droneTarget = 0; }, { once: true });
+    }
+    if (want && drone.paused) drone.play().catch(() => {}); // refusé avant un premier geste : on réessaie au prochain
+    if (drone && !droneTimer) droneTimer = setInterval(stepDrone, 50);
+  }
+  function stepDrone() {
+    droneVol += (droneTarget - droneVol) * 0.08;
+    if (Math.abs(droneTarget - droneVol) < 0.003) {
+      droneVol = droneTarget;
+      clearInterval(droneTimer);
+      droneTimer = 0;
+      if (droneVol === 0) drone.pause();
+    }
+    drone.volume = droneVol;
+  }
+  if (contact) {
+    new IntersectionObserver(([entry]) => {
+      contactSeen = entry.isIntersecting;
+      updateDrone();
+    }, { threshold: 0.35 }).observe(contact);
+  }
+  document.addEventListener('sound:update', updateDrone);
+  // Les navigateurs bloquent le son avant un premier geste : on relance la nappe au premier clic / touche
+  ['pointerdown', 'keydown'].forEach((type) => document.addEventListener(type, () => { if (sfx.on) updateDrone(); }));
+
+  // État de départ : coupé, sauf si le visiteur avait activé le son lors d'une visite précédente
+  let stored = null;
+  try { stored = localStorage.getItem(STORE_KEY); } catch (err) { /* stockage indisponible */ }
+  setSound(stored === 'on');
 })();

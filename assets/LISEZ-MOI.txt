@@ -8,3 +8,6 @@ Dépose ici tes fichiers :
 
 Tant que hero-loop.mp4 est absent, le site affiche un dégradé animé aux couleurs de la marque.
 Tant que showreel.mp4 est absent, la lightbox affiche « coming soon ».
+
+Sons de l'interface : dans le dossier sounds/. La liste des fichiers à créer (noms, déclencheurs,
+durées, intentions) est dans sounds/LISTE-DES-SONS.md.

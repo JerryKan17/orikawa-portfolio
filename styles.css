@@ -30,6 +30,11 @@
   --font-body: "EB Garamond", Garamond, Georgia, serif;
   --font-script: "emily-austin", "Caveat", cursive;
 
+  /* Tailles des annotations (plus grandes pour rester lisibles) :
+     --note-size : notes en EB Garamond italique · --script-size : touches manuscrites en Emily Austin */
+  --note-size: 1.1875rem;
+  --script-size: 2rem;
+
   /* Espacements (multiples de 4 et 8) */
   --space-1: 4px;  --space-2: 8px;  --space-3: 12px;  --space-4: 16px;
   --space-6: 24px; --space-8: 32px; --space-12: 48px; --space-16: 64px;
@@ -208,21 +213,29 @@ a { color: inherit; }
 .nav a.is-current:not(.btn)::after { transform: scaleX(1); opacity: .45; }
 .nav a.is-current:not(.btn):hover::after { opacity: 1; }
 
-/* Bouton des sons : les trois traits de la vague du logo.
+/* Bouton des sons : les trois traits de la vague du logo, suivis d'une annotation
+   « sound on / off » dans le style des notes du site (italique, couleur douce).
    Coupé : traits à plat (pas de signal). Actif : ils ondulent comme un égaliseur. */
 .sound-toggle {
-  display: grid;
-  place-items: center;
-  width: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
   height: 40px;
-  margin-inline: calc(var(--space-2) * -1);
-  padding: 0;
+  margin-inline: calc(var(--space-3) * -1);
+  padding: 0 var(--space-3);
   border: 0;
   border-radius: var(--radius-pill);
   background: transparent;
   color: inherit;
   transition: background-color var(--t-base) var(--ease-out);
 }
+.sound-toggle__label {
+  font: 500 .9375rem/1 var(--font-title);
+  letter-spacing: .01em;
+  white-space: nowrap;
+}
+/* Largeur fixe pour « on » / « off » : le menu ne bouge pas quand l'état change */
+.sound-toggle__state { display: inline-block; min-width: 1.45em; }
 .sound-toggle:hover { background: rgb(19 21 34 / .07); }
 .site-header.is-on-dark .sound-toggle:hover,
 .site-header.is-dark-section .sound-toggle:hover { background: rgb(255 247 221 / .12); }
@@ -480,7 +493,7 @@ a { color: inherit; }
   min-width: 0;
   margin: 0;
   color: var(--text-soft);
-  font-size: 1rem;
+  font-size: var(--note-size);
   font-style: italic;
   line-height: 1.3;
   white-space: nowrap;
@@ -562,6 +575,7 @@ a { color: inherit; }
   font: 500 .875rem/1 var(--font-title);
   opacity: 0;
   transform: translateX(8px);
+  pointer-events: none; /* posée par-dessus « Explore works » : elle ne doit pas lui voler la souris */
   transition: opacity var(--t-base) var(--ease-out), transform var(--t-base) var(--ease-out);
 }
 
@@ -640,7 +654,7 @@ a { color: inherit; }
   font-size: 1.25rem;
 }
 .lightbox__missing[hidden] { display: none; }
-.lightbox__missing .script { font-size: 2rem; color: var(--mint); }
+.lightbox__missing .script { font-size: calc(var(--script-size) * 1.25); color: var(--mint); }
 
 /* Légende */
 .lightbox__caption {
@@ -660,8 +674,8 @@ a { color: inherit; }
 }
 .lightbox__meta {
   margin: var(--space-2) 0 0;
-  color: rgb(255 247 221 / .65);
-  font-size: 1rem;
+  color: rgb(255 247 221 / .75);
+  font-size: var(--note-size);
   font-style: italic;
   line-height: 1.3;
 }
@@ -761,7 +775,7 @@ a { color: inherit; }
   grid-column: 1;
   margin: 0;
   color: var(--text-soft);
-  font-size: 1rem;
+  font-size: var(--note-size);
   font-style: italic;
 }
 
@@ -853,7 +867,7 @@ a { color: inherit; }
 .work__meta {
   margin: var(--space-1) 0 0;
   color: var(--text-soft);
-  font-size: .9375rem;
+  font-size: 1.0625rem;
   font-style: italic;
   line-height: 1.3;
 }
@@ -868,7 +882,7 @@ a { color: inherit; }
   text-transform: uppercase;
 }
 .work--featured .work__name { font-size: clamp(1.75rem, 2.6vw, 2.5rem); line-height: 1.05; letter-spacing: -.02em; }
-.work--featured .work__meta { margin-top: var(--space-2); font-size: 1.0625rem; }
+.work--featured .work__meta { margin-top: var(--space-2); font-size: var(--note-size); }
 .work__desc {
   max-width: 34rem;
   margin: var(--space-6) 0 var(--space-8);
@@ -917,8 +931,8 @@ a { color: inherit; }
 /* 5d. ABOUT --------------------------------------------------------------- */
 /* Même en-tête que Works. Le fond passe doucement du crème au sable (pour distinguer la section),
    puis, tout en bas, du sable à la nuit pour amener la section Contact.
-   Le contenu est une seule colonne centrée, à une largeur de lecture confortable :
-   photo, accroche, texte, puis les compétences en bulles (GIF au survol). */
+   Photo du studio et texte côte à côte (colonne de texte à largeur de lecture confortable),
+   puis les compétences en bulles, sur une ligne (GIF au survol). */
 .about {
   --fade: 280px; /* hauteur du passage vers la nuit, en bas de la section */
   position: relative;
@@ -937,17 +951,24 @@ a { color: inherit; }
 }
 
 .about__body {
-  max-width: 42rem;
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: var(--space-16) var(--space-16);
+  align-items: center;
+  max-width: 72rem;
   margin: 0 auto;
 }
+.about__text { max-width: 36rem; }
+.about__skills { grid-column: 1 / -1; }
 
 /* Photo : --photo: url(assets/…) sur .about__frame. En attendant, un dégradé aux couleurs de la marque. */
-.about__photo { margin: 0 0 var(--space-12); }
+.about__photo { margin: 0; }
 .about__frame {
   position: relative;
   display: grid;
   place-items: center;
-  aspect-ratio: 3 / 2;
+  aspect-ratio: 4 / 5;
+  max-height: 78svh;
   border-radius: var(--radius-m);
   overflow: hidden;
   background: linear-gradient(160deg, var(--blue), var(--night) 70%);
@@ -968,7 +989,7 @@ a { color: inherit; }
 .about__caption {
   margin-top: var(--space-3);
   color: var(--text-soft);
-  font-size: 1.5rem;
+  font-size: var(--script-size);
   line-height: 1;
   text-align: right;
 }
@@ -978,11 +999,10 @@ a { color: inherit; }
   margin-bottom: var(--space-8);
   font: 700 clamp(1.5rem, 2.4vw, 2.125rem)/1.15 var(--font-title);
   letter-spacing: -.02em;
-  text-align: center;
   text-wrap: balance;
 }
 .about__skills-title {
-  margin: var(--space-12) 0 var(--space-4);
+  margin: 0 0 var(--space-4);
   color: var(--text-soft);
   font: 600 .75rem/1 var(--font-title);
   letter-spacing: .08em;
@@ -990,10 +1010,10 @@ a { color: inherit; }
   text-transform: uppercase;
 }
 
-/* Bulles de compétences */
+/* Bulles de compétences : sur une seule ligne (elles passent à la ligne seulement sur écran étroit) */
 .skills {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: center;
   gap: var(--space-3);
   margin: 0;
@@ -1042,7 +1062,7 @@ a { color: inherit; }
 }
 
 /* 5e. CONTACT ------------------------------------------------------------- */
-/* Dernière section, sur fond nuit. Grand titre (la seconde ligne reprend le dégradé du hero),
+/* Dernière section, sur fond nuit, centrée. Grand titre (la seconde ligne reprend le dégradé du hero),
    une phrase, puis le bouton « Start a project » et l'adresse e-mail (copiée au clic).
    Effet : la vague du logo, en grand, dessinée en bas de la section (canvas, main.js) :
    elle se déplie à l'arrivée, ondule doucement, s'amplifie sous la souris, et un clic y lance une onde. */
@@ -1065,7 +1085,12 @@ a { color: inherit; }
   height: 100%;
   pointer-events: none;
 }
-.contact__inner { position: relative; max-width: 60rem; }
+.contact__inner {
+  position: relative;
+  max-width: 60rem;
+  margin-inline: auto;
+  text-align: center; /* section centrée */
+}
 .contact__kicker {
   margin: 0 0 var(--space-6);
   color: rgb(255 247 221 / .6);
@@ -1092,7 +1117,7 @@ a { color: inherit; }
 }
 .contact__note {
   max-width: 34rem;
-  margin: var(--space-8) 0 0;
+  margin: var(--space-8) auto 0;
   color: rgb(255 247 221 / .75);
   font-size: 1.25rem;
   line-height: 1.5;
@@ -1100,6 +1125,7 @@ a { color: inherit; }
 .contact__actions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
   gap: var(--space-4) var(--space-8);
   margin-top: var(--space-12);
@@ -1132,7 +1158,7 @@ a { color: inherit; }
 .contact__copy {
   color: var(--mint);
   font-family: var(--font-script);
-  font-size: 1.375rem;
+  font-size: var(--script-size);
   transition: opacity var(--t-base) var(--ease-out);
 }
 
@@ -1151,7 +1177,7 @@ a { color: inherit; }
   font-size: 1rem;
 }
 .site-footer p { margin: 0; }
-.site-footer .script { color: var(--mint); font-size: 1.5rem; text-decoration: none; }
+.site-footer .script { color: var(--mint); font-size: var(--script-size); text-decoration: none; }
 .site-footer .script:hover { text-decoration: underline; }
 
 /* 8. APPARITION AU SCROLL ------------------------------------------------- */
@@ -1197,19 +1223,25 @@ a { color: inherit; }
   --c-halo: var(--cream);
   --c-echo: var(--mint);
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
   z-index: 100;
   pointer-events: none;
+  will-change: transform; /* déplacé par la carte graphique, sans repeindre la page */
   transition: opacity var(--t-base) var(--ease-out);
 }
 .cursor.is-dark { --c-main: var(--cream); --c-halo: var(--night); }
 .cursor.is-hidden { opacity: 0; }
 
+/* Les tracés sont dessinés autour de la pointe (0,0) et débordent du SVG d'un pixel */
 .cursor svg {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
   overflow: visible;
 }
 .cursor path {
@@ -1230,9 +1262,14 @@ a { color: inherit; }
 
 /* 9. ÉCRANS ÉTROITS (provisoire : la version téléphone viendra après) ------ */
 @media (max-width: 1080px) {
+  .skills { flex-wrap: wrap; }
   .works__list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 960px) {
+  .hero__lede { white-space: normal; max-width: 30ch; }
+  .about__body { grid-template-columns: 1fr; gap: var(--space-12); }
+  .about__photo { width: min(100%, 420px); margin-inline: auto; }
+  .about__text { max-width: none; }
   .work--featured { grid-template-columns: 1fr; gap: var(--space-6); }
   .lightbox { --cap-h: 200px; }
   .lightbox__caption { grid-template-columns: repeat(3, 1fr); gap: var(--space-4) var(--space-6); }

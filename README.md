@@ -23,7 +23,7 @@ Toutes les sections sont en place : hero, Works, About, Contact, lightbox. Il re
 4. **Filtres de Works** : « All », « DSP », « Music » et « Other ». Range chaque projet dans sa ou ses catégories avec `data-type` (voir la section Works ci-dessous).
 5. **About** : la note sous le titre, l'accroche, le lorem ipsum et la liste des compétences sont à réécrire. Ajoute la photo du studio (`--photo`) et un GIF par bulle (`--gif`).
 6. **Contact** : remplace `hello@example.com` (3 endroits dans la section : `href`, `data-copy` et le texte affiché). Les liens Instagram et WhatsApp seront ajoutés plus tard.
-7. **Sons** : crée les fichiers listés dans `assets/sounds/LISTE-DES-SONS.md` (noms, déclencheurs, durées, intentions) et dépose-les dans `assets/sounds/`.
+7. **Sons** : les fichiers sont en place ; la liste à jour (sons branchés et sons retirés) est dans `assets/sounds/LISTE-DES-SONS.md`.
 8. **Vague des boutons** : modifie `ZIGZAG` dans `main.js` ou remplace `makeWave()` par la vague exportée de Figma.
 
 ## Direction artistique (telle qu'appliquée dans le code)
@@ -31,7 +31,7 @@ Toutes les sections sont en place : hero, Works, About, Contact, lightbox. Il re
 - **Couleurs** : crème `#FFF7DD` (fond), sable `#F6EAC4` (fond d'About), nuit `#131522` (texte, fond de Contact et du footer), bleu `#323A72` (texte secondaire), menthe `#29E3BE` (accent). Jaune et magenta : sur la planche, pas encore utilisés.
 - **Passage d'une section à l'autre** : Works sur crème, About glisse doucement vers le sable, puis tout en bas du sable vers la nuit (en passant par le bleu) pour amener Contact. Pas de filet entre les sections.
 - **Typographies** : Effra (titres, boutons, interface), EB Garamond (corps de texte, annotations en italique), Emily Austin (touches manuscrites).
-- **Annotations** : petites phrases en italique, couleur douce, sans trait devant (note du hero, notes sous les titres de section).
+- **Annotations** : phrases en EB Garamond italique, couleur douce, sans trait devant (note du hero, notes sous les titres, types des projets). Touches manuscrites en Emily Austin (légende de la photo, « copy », lien du footer). Tailles réglables en haut de `styles.css` : `--note-size` et `--script-size`. Le bouton « sound on / off » est en Effra.
 - **Motif** : la vague à 3 traits du logo (menthe, bleu, nuit) :
   - sous les boutons au survol ;
   - en fines bandes qui défilent lentement entre les sections (bords en fondu ; version claire sur fond foncé) ;
@@ -56,9 +56,9 @@ Pour forcer un état sur un élément : `data-cursor="play"` (ou `close`, `link`
 
 ## Sons
 
-Tous les sons de l'interface sont branchés dans `main.js` (moteur en section 0, déclencheurs en section 8). Ils sont coupés par défaut : le visiteur les active avec le bouton « vague » du header, à gauche de « Start a project » (traits à plat quand le son est coupé, qui ondulent comme un égaliseur quand il est actif). Son choix est mémorisé. Un fichier absent est ignoré. Les vidéos ne dépendent pas de ce bouton.
+Tous les sons de l'interface sont branchés dans `main.js` (moteur en section 0, déclencheurs en section 8). Ils sont actifs par défaut : le visiteur peut les couper avec le bouton « vague » du header, à gauche de « Start a project ». Le bouton est annoté « sound on » / « sound off » (italique, comme les notes du site) ; ses traits ondulent comme un égaliseur quand le son est actif et passent à plat quand il est coupé. Le choix est mémorisé. `ui-click` joue à chaque clic sur un lien ou un bouton. Un fichier absent est ignoré. Les vidéos ne dépendent pas de ce bouton.
 
-Réglages : objet `SOUNDS` (volume de chaque son, délai minimum entre deux lectures) et `MASTER` (volume général). La liste à créer : `assets/sounds/LISTE-DES-SONS.md`.
+Réglages : objet `SOUNDS` (volume de chaque son, délai minimum entre deux lectures) et `MASTER` (volume général). La liste : `assets/sounds/LISTE-DES-SONS.md`.
 
 ## Header
 
@@ -82,14 +82,14 @@ Pour ajouter un filtre : un bouton `<button class="chip" type="button" data-filt
 
 ## About
 
-Une seule colonne centrée, à une largeur de lecture confortable : photo du studio (3:2) avec une légende manuscrite, accroche, texte, puis les compétences en bulles. Au survol ou au focus clavier d'une bulle, son GIF apparaît au-dessus.
+Photo du studio (4:5, légende manuscrite) et texte côte à côte, la colonne de texte gardant une largeur de lecture confortable ; puis les compétences en bulles, sur une seule ligne (elles passent à la ligne sous 1080 px ; photo et texte s'empilent sous 960 px). Au survol ou au focus clavier d'une bulle, son GIF apparaît au-dessus.
 - Photo : `style="--photo: url(assets/…)"` sur `.about__frame`, puis retire le texte « studio photo ».
 - GIF d'une bulle : `style="--gif: url(assets/…)"` sur son `.bubble__gif` (format 4:3).
 - Ajouter une compétence : copie une ligne `<li class="bubble">`.
 
 ## Contact
 
-Dernière section, sur fond nuit : grand titre « Let's unfold / your next film. » (la seconde ligne en dégradé menthe et crème), une phrase, le bouton « Start a project » (ouvre la messagerie) et l'adresse e-mail, qui se copie au clic (« copy » devient « copied »).
+Dernière section, sur fond nuit, centrée : grand titre « Let's unfold / your next film. » (la seconde ligne en dégradé menthe et crème), une phrase, le bouton « Start a project » (ouvre la messagerie) et l'adresse e-mail, qui se copie au clic (« copy » devient « copied »).
 
 L'effet : la vague du logo, en grand, en bas de la section (dessinée en canvas par `main.js`, section 7) :
 - à l'arrivée sur la section, elle se déplie depuis une ligne plate ;

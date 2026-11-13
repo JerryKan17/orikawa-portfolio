@@ -36,13 +36,15 @@
       <a href="#works">Works</a>
       <a href="#about">About</a>
       <a href="#contact">Contact</a>
-      <!-- Sons du site : coupés par défaut. Icône : la vague du logo, à plat quand le son est coupé. -->
-      <button class="sound-toggle" type="button" aria-pressed="false" aria-label="Sound" title="Sound off" data-sound-toggle>
+      <!-- Sons du site : actifs par défaut. Icône : la vague du logo, à plat quand le son est coupé,
+           suivie d'une annotation « sound on / off » (mise à jour par main.js). -->
+      <button class="sound-toggle" type="button" aria-pressed="true" data-sound-toggle>
         <svg viewBox="0 0 24 18" aria-hidden="true" focusable="false">
           <path class="sound-toggle__w3" d="M1.5 4.5l3.5 3 3.5-3 3.5 3 3.5-3 3.5 3 3.5-3"/>
           <path class="sound-toggle__w2" d="M1.5 9l3.5 3 3.5-3 3.5 3 3.5-3 3.5 3 3.5-3"/>
           <path class="sound-toggle__w1" d="M1.5 13.5l3.5 3 3.5-3 3.5 3 3.5-3 3.5 3 3.5-3"/>
         </svg>
+        <span class="sound-toggle__label">sound <span class="sound-toggle__state" aria-hidden="true">on</span></span>
       </button>
       <a class="btn btn--ghost" href="#contact" data-wave>Start a project</a>
     </nav>
@@ -176,7 +178,7 @@
       </ul>
     </section>
 
-    <!-- ABOUT : une colonne centrée. Photo du studio, accroche, texte, puis les compétences en bulles.
+    <!-- ABOUT : photo du studio et texte côte à côte, puis les compétences en bulles sur une ligne.
          Au survol (ou au focus clavier) d'une bulle, son GIF apparaît au-dessus.
          Photo : style="--photo: url(assets/…)" sur .about__frame (puis retire le texte « studio photo »).
          GIF : style="--gif: url(assets/…)" sur .bubble__gif.
@@ -202,7 +204,10 @@
           <p class="reveal">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante venenatis dapibus, posuere velit aliquet. Cras mattis consectetur purus sit amet fermentum. Donec ullamcorper nulla non metus auctor fringilla, vestibulum id ligula porta felis euismod semper.</p>
           <p class="reveal">Nullam quis risus eget urna mollis ornare vel eu leo. Maecenas faucibus mollis interdum. Aenean lacinia bibendum nulla sed consectetur. Curabitur blandit tempus porttitor, cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.</p>
           <p class="reveal">Vivamus sagittis lacus vel augue laoreet rutrum faucibus dolor auctor. Morbi leo risus, porta ac consectetur ac, vestibulum at eros.</p>
+        </div>
 
+        <!-- Compétences : une ligne de bulles sous la photo et le texte -->
+        <div class="about__skills">
           <h3 class="about__skills-title reveal">What I do</h3>
           <ul class="skills reveal" style="--i:1">
             <li class="bubble" tabindex="0" data-cursor="link">Motion design<span class="bubble__gif" aria-hidden="true"></span></li>

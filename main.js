@@ -1,7 +1,7 @@
 /* orikawa laurentin · main.js
    1. Vague des boutons   2. Hero (titre ajusté, bascule au survol)   2b. Lightbox   2c. Filtres de Works
    3. Header (section en cours)   4. Apparition au scroll   5. Grain de papier   6. Curseur
-   7. Contact (e-mail, grande vague)   8. Sons (bouton, survols, clics, nappe de Contact)
+   7. Contact (e-mail, grande vague)   8. Sons (bouton, survols, clics)
    Le moteur de sons (0) est en haut pour que toutes les sections puissent l'appeler. */
 (() => {
   'use strict';
@@ -11,9 +11,10 @@
   /* 0. SONS : MOTEUR -----------------------------------------------------------
      Les fichiers vont dans assets/sounds/, au nom indiqué ici (+ .mp3).
      Liste complète et consignes : assets/sounds/LISTE-DES-SONS.md.
-     Coupés par défaut : le visiteur les active avec le bouton du header (choix mémorisé).
-     Un fichier absent est simplement ignoré : on peut ajouter les sons au fur et à mesure.
-     volume : de 0 à 1 (multiplié par MASTER) · throttle : délai minimum entre deux lectures (ms) */
+     Actifs par défaut : le visiteur peut les couper avec le bouton du header (choix mémorisé).
+     Un fichier absent est simplement ignoré.
+     volume : de 0 à 1 (multiplié par MASTER) · throttle : délai minimum entre deux lectures (ms)
+     untilEnd : le son ne peut pas être relancé tant que le précédent n'est pas fini (délai = durée du fichier) */
   const SOUND_DIR = 'assets/sounds/';
   const MASTER = 0.8;
   const SOUNDS = {
@@ -22,10 +23,7 @@
     'ui-hover':      { volume: 0.18, throttle: 60 },
     'ui-click':      { volume: 0.4 },
     'hero-reveal':   { volume: 0.5 },
-    'hero-unreveal': { volume: 0.3 },
-    'lightbox-open': { volume: 0.55 },
     'lightbox-close':{ volume: 0.45 },
-    'filter':        { volume: 0.4 },
     'card-hover':    { volume: 0.25, throttle: 90 },
     'bubble-1':      { volume: 0.35 },
     'bubble-2':      { volume: 0.35 },
@@ -33,11 +31,10 @@
     'bubble-4':      { volume: 0.35 },
     'bubble-5':      { volume: 0.35 },
     'bubble-6':      { volume: 0.35 },
-    'wave-pluck':    { volume: 0.5, throttle: 80 },
+    'wave-pluck':    { volume: 0.5, untilEnd: true }, // pas de spam : un pluck à la fois
     'copy':          { volume: 0.5 },
-    'contact-drone': { volume: 0.22 }, // nappe en boucle (voir section 8)
   };
-  const sfx = { on: false, cache: {}, missing: new Set(), last: {} };
+  const sfx = { on: true, cache: {}, missing: new Set(), last: {} };
 
   function loadSound(name) {
     if (!sfx.cache[name]) {
@@ -54,8 +51,11 @@
     if (!sfx.on || !def || sfx.missing.has(name)) return;
     const now = performance.now();
     if (def.throttle && now - (sfx.last[name] || 0) < def.throttle) return;
+    const base = loadSound(name);
+    // untilEnd : bloqué pendant toute la durée du fichier (lue dans le fichier lui-même)
+    if (def.untilEnd && now < (sfx.last[name] || 0) + (base.duration || 0) * 1000) return;
     sfx.last[name] = now;
-    const a = loadSound(name).cloneNode(); // une copie par lecture : les sons peuvent se superposer
+    const a = base.cloneNode(); // une copie par lecture : les sons peuvent se superposer
     a.volume = Math.min(1, def.volume * MASTER);
     a.play().catch(() => {});
   }
@@ -136,10 +136,10 @@
 
   // Bascule : vidéo à travers le texte (repos) <-> vidéo en plein fond (survol de « See showreel »)
   let revealed = false;
-  function setReveal(on, silent) {
+  function setReveal(on) {
     if (on === revealed) return;
     revealed = on;
-    if (!silent) playSound(on ? 'hero-reveal' : 'hero-unreveal');
+    if (on) playSound('hero-reveal');
     hero.classList.toggle('is-reveal', on);
     document.documentElement.classList.toggle('hero-revealed', on); // efface le grain sur la vidéo
     syncHeader();
@@ -231,8 +231,7 @@
     lbReturnFocus = trigger || document.activeElement;
     clearTimeout(lbHideTimer);
 
-    setReveal(false, true);
-    playSound('lightbox-open');
+    setReveal(false);
     video.pause(); // la boucle du hero se met en pause pendant la lecture
     document.body.classList.add('has-lightbox');
     pageParts.forEach((el) => { if (el) el.inert = true; });
@@ -246,7 +245,6 @@
     history.pushState({ film: true }, '');
     lbInHistory = true;
     document.dispatchEvent(new Event('cursor:refresh'));
-    document.dispatchEvent(new Event('sound:update'));
   }
 
   function closeLightbox(fromHistory) {
@@ -275,7 +273,6 @@
     if (lbReturnFocus && lbReturnFocus.focus) lbReturnFocus.focus({ preventScroll: true });
     lbReturnFocus = null;
     document.dispatchEvent(new Event('cursor:refresh'));
-    document.dispatchEvent(new Event('sound:update'));
   }
 
   document.querySelectorAll('[data-film]').forEach((el) => {
@@ -302,7 +299,6 @@
   filterBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
       const f = btn.dataset.filter;
-      playSound('filter');
       filterBtns.forEach((b) => {
         const on = b === btn;
         b.classList.toggle('is-active', on);
@@ -584,18 +580,21 @@
       return { state: 'default' };
     }
 
+    // Mesures mises en cache (relues au défilement, au redimensionnement et quand la page change),
+    // pour ne jamais forcer le navigateur à recalculer la mise en page pendant que la souris bouge.
+    let heroBottom = 0;
+    let disabledRects = [];
+    function measure() {
+      heroBottom = hero.getBoundingClientRect().bottom;
+      disabledRects = Array.from(document.querySelectorAll(':disabled'), (el) => el.getBoundingClientRect());
+    }
+
     const DARK_ZONE = '[data-theme="dark"], .site-header.is-dark-section';
-    const isDark = (target) => lbOpen || (revealed && y < hero.getBoundingClientRect().bottom) ||
+    const isDark = (target) => lbOpen || (revealed && y < heroBottom) ||
       !!(target && target.closest && target.closest(DARK_ZONE));
 
     // Les contrôles désactivés laissent passer la souris (voir styles.css) : on les repère par leur position
-    function overDisabled() {
-      for (const el of document.querySelectorAll(':disabled')) {
-        const r = el.getBoundingClientRect();
-        if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return true;
-      }
-      return false;
-    }
+    const overDisabled = () => disabledRects.some((r) => x >= r.left && x <= r.right && y >= r.top && y <= r.bottom);
 
     function update(target) {
       const found = overDisabled() ? { state: 'disabled' } : stateFor(target);
@@ -610,15 +609,20 @@
 
     // La page change sous une souris immobile (lightbox, bascule du hero, défilement)
     function refresh() {
+      measure();
       if (x < 0) return;
       update(document.elementFromPoint(x, y));
     }
 
     // --- Animation ------------------------------------------------------------
     const approach = (a, b, k) => a + (b - a) * k;
-    const pathOf = (l) => l.pts.map(([px, py], i) => (i ? 'L' : 'M') + (l.x + l.dx + px).toFixed(2) + ' ' + (l.y + l.dy + py).toFixed(2)).join('');
+    // Tracé d'un trait, relatif à la souris (le conteneur, lui, est placé sur la souris)
+    const pathOf = (l) => l.pts.map(([px, py], i) => (i ? 'L' : 'M') + (l.x - x + l.dx + px).toFixed(1) + ' ' + (l.y - y + l.dy + py).toFixed(1)).join('');
+    const setPath = (el, d, cacheOwner) => { if (cacheOwner.d !== d) { cacheOwner.d = d; el.setAttribute('d', d); } };
+    const setOpacity = (el, op, cacheOwner) => { const v = op.toFixed(2); if (cacheOwner.o !== v) { cacheOwner.o = v; el.style.opacity = v; } };
 
     function render() {
+      cursor.style.transform = `translate3d(${x}px, ${y}px, 0)`;
       const still = reduceMotion.matches;
       const s = STATES[state];
       const squash = down ? 0.72 : 1;
@@ -647,11 +651,12 @@
         else op = follow === 'off' ? 0 : fullOp;
         l.op = approach(l.op, op, still ? 1 : 0.25);
 
-        l.el.setAttribute('d', pathOf(l));
-        l.el.style.opacity = l.op.toFixed(3);
+        const d = pathOf(l);
+        setPath(l.el, d, l);
+        setOpacity(l.el, l.op, l);
         if (name === 'main') {
-          halo.el.setAttribute('d', l.el.getAttribute('d'));
-          halo.el.style.opacity = l.op.toFixed(3);
+          setPath(halo.el, d, halo);
+          setOpacity(halo.el, l.op, halo);
         }
 
         if (Math.abs(x - l.x) > 0.05 || Math.abs(y - l.y) > 0.05 || Math.abs(l.op - op) > 0.005 ||
@@ -692,10 +697,13 @@
 
     document.addEventListener('cursor:refresh', () => requestAnimationFrame(refresh));
     let scrollTick = 0;
-    window.addEventListener('scroll', () => {
+    const scheduleRefresh = () => {
       cancelAnimationFrame(scrollTick);
       scrollTick = requestAnimationFrame(refresh);
-    }, { passive: true });
+    };
+    window.addEventListener('scroll', scheduleRefresh, { passive: true });
+    window.addEventListener('resize', scheduleRefresh);
+    measure();
 
     // Souris débranchée / passage en tactile : on rend le curseur du système
     finePointer.addEventListener('change', () => {
@@ -756,7 +764,7 @@
     const still = () => reduceMotion.matches;
     let W = 0, H = 0;
     let visible = false, frame = 0, last = 0;
-    let phase = 0, intro = 0, hover = 0, px = 0, targetX = 0, inside = false;
+    let phase = 0, intro = 0, hover = 0, px = 0, targetX = 0, pointerX = null, inside = false;
     let pulses = [];
 
     // Zigzag de -1 à 1 (même forme que la vague du logo)
@@ -769,7 +777,7 @@
       canvas.width = Math.round(W * dpr);
       canvas.height = Math.round(H * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      if (!px) px = targetX = W * 0.6;
+      if (!px) px = targetX = W * 0.5; // bosse de repos au centre, sous le texte centré
       if (still() || !frame) draw(performance.now());
     }
 
@@ -781,6 +789,7 @@
       else {
         phase += dt * WAVE.speed;
         intro = Math.min(1, intro + dt / 1.8);
+        if (pointerX !== null) { targetX = pointerX - section.getBoundingClientRect().left; pointerX = null; }
         hover += ((inside ? 1 : 0) - hover) * 0.06;
         px += (targetX - px) * 0.12;
         pulses = pulses.filter((p) => now - p.t < 2400);
@@ -837,10 +846,9 @@
     resize();
 
     section.addEventListener('pointermove', (e) => {
-      const r = section.getBoundingClientRect();
-      targetX = e.clientX - r.left;
+      pointerX = e.clientX; // converti en position dans la section au prochain dessin
       inside = true;
-    });
+    }, { passive: true });
     section.addEventListener('pointerleave', () => { inside = false; });
     section.addEventListener('pointerdown', (e) => {
       if (e.target.closest('a, button')) return;
@@ -852,22 +860,23 @@
     reduceMotion.addEventListener('change', () => { if (still()) draw(performance.now()); else start(); });
   }
 
-  /* 8. SONS : BOUTON, SURVOLS, CLICS, NAPPE DE CONTACT ---------------------------
-     Bouton du header [data-sound-toggle] : active / coupe les sons (choix mémorisé dans le navigateur).
-     Les vidéos (hero, lightbox) ne dépendent pas de ce bouton : le film de la lightbox garde son propre son. */
+  /* 8. SONS : BOUTON, SURVOLS, CLICS -------------------------------------------
+     Bouton du header [data-sound-toggle] : coupe / réactive les sons (choix mémorisé dans le navigateur).
+     Son annotation (« sound on » / « sound off ») suit l'état.
+     Les vidéos (hero, lightbox) ne dépendent pas de ce bouton : le film de la lightbox garde son propre son.
+     Les navigateurs bloquent tout son avant le premier clic ou la première touche du visiteur. */
   const soundToggle = document.querySelector('[data-sound-toggle]');
+  const soundState = soundToggle && soundToggle.querySelector('.sound-toggle__state');
   const STORE_KEY = 'orikawa-sound';
 
   function setSound(on) {
     sfx.on = on;
-    document.documentElement.classList.toggle('sound-on', on);
     if (soundToggle) {
       soundToggle.setAttribute('aria-pressed', String(on));
-      soundToggle.title = on ? 'Sound on' : 'Sound off';
+      soundState.textContent = on ? 'on' : 'off';
     }
     try { localStorage.setItem(STORE_KEY, on ? 'on' : 'off'); } catch (err) { /* stockage indisponible */ }
-    if (on) Object.keys(SOUNDS).forEach((name) => { if (name !== 'contact-drone') loadSound(name); });
-    updateDrone();
+    if (on) Object.keys(SOUNDS).forEach(loadSound); // préchargement
   }
 
   if (soundToggle) {
@@ -890,49 +899,15 @@
     else playSound('ui-hover');
   });
 
-  // Clics : son générique, sauf pour les éléments qui ont le leur
-  const OWN_SOUND = '[data-film], [data-filter], [data-copy], [data-sound-toggle], [data-lightbox-close]';
+  // Clics : ui-click sur chaque lien ou bouton (filtres, vignettes, lightbox compris).
+  // Seul le bouton des sons a ses propres sons (toggle-on / toggle-off).
   document.addEventListener('click', (e) => {
     const el = e.target.closest('a[href], button');
-    if (el && !el.closest(OWN_SOUND)) playSound('ui-click');
+    if (el && !el.matches('[data-sound-toggle]')) playSound('ui-click');
   });
 
-  // Nappe de la section Contact : monte doucement quand la section est à l'écran, redescend sinon
-  let drone = null, droneVol = 0, droneTarget = 0, droneTimer = 0, contactSeen = false;
-  function updateDrone() {
-    const want = sfx.on && contactSeen && !lbOpen && !sfx.missing.has('contact-drone');
-    droneTarget = want ? Math.min(1, SOUNDS['contact-drone'].volume * MASTER) : 0;
-    if (want && !drone) {
-      drone = new Audio(SOUND_DIR + 'contact-drone.mp3');
-      drone.loop = true;
-      drone.volume = 0;
-      drone.addEventListener('error', () => { sfx.missing.add('contact-drone'); droneTarget = 0; }, { once: true });
-    }
-    if (want && drone.paused) drone.play().catch(() => {}); // refusé avant un premier geste : on réessaie au prochain
-    if (drone && !droneTimer) droneTimer = setInterval(stepDrone, 50);
-  }
-  function stepDrone() {
-    droneVol += (droneTarget - droneVol) * 0.08;
-    if (Math.abs(droneTarget - droneVol) < 0.003) {
-      droneVol = droneTarget;
-      clearInterval(droneTimer);
-      droneTimer = 0;
-      if (droneVol === 0) drone.pause();
-    }
-    drone.volume = droneVol;
-  }
-  if (contact) {
-    new IntersectionObserver(([entry]) => {
-      contactSeen = entry.isIntersecting;
-      updateDrone();
-    }, { threshold: 0.35 }).observe(contact);
-  }
-  document.addEventListener('sound:update', updateDrone);
-  // Les navigateurs bloquent le son avant un premier geste : on relance la nappe au premier clic / touche
-  ['pointerdown', 'keydown'].forEach((type) => document.addEventListener(type, () => { if (sfx.on) updateDrone(); }));
-
-  // État de départ : coupé, sauf si le visiteur avait activé le son lors d'une visite précédente
+  // État de départ : actif, sauf si le visiteur a coupé le son lors d'une visite précédente
   let stored = null;
   try { stored = localStorage.getItem(STORE_KEY); } catch (err) { /* stockage indisponible */ }
-  setSound(stored === 'on');
+  setSound(stored !== 'off');
 })();

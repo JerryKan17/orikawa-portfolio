@@ -1,5 +1,6 @@
 /* orikawa laurentin · main.js
    1. Vague des boutons   2. Hero (titre ajusté, bascule au survol)   2b. Lightbox   2c. Filtres de Works
+   2d. Works : projets lus dans data/works.json
    3. Header (section en cours)   4. Apparition au scroll   5. Grain de papier   6. Curseur
    7. Contact (e-mail, grande vague)   8. Sons (bouton, survols, clics)
    Le moteur de sons (0) est en haut pour que toutes les sections puissent l'appeler. */
@@ -13,8 +14,7 @@
      Liste complète et consignes : assets/sounds/LISTE-DES-SONS.md.
      Actifs par défaut : le visiteur peut les couper avec le bouton du header (choix mémorisé).
      Un fichier absent est simplement ignoré.
-     volume : de 0 à 1 (multiplié par MASTER) · throttle : délai minimum entre deux lectures (ms)
-     untilEnd : le son ne peut pas être relancé tant que le précédent n'est pas fini (délai = durée du fichier) */
+     volume : de 0 à 1 (multiplié par MASTER) · throttle : délai minimum entre deux lectures (ms) */
   const SOUND_DIR = 'assets/sounds/';
   const MASTER = 0.8;
   const SOUNDS = {
@@ -31,7 +31,7 @@
     'bubble-4':      { volume: 0.35 },
     'bubble-5':      { volume: 0.35 },
     'bubble-6':      { volume: 0.35 },
-    'wave-pluck':    { volume: 0.5, untilEnd: true }, // pas de spam : un pluck à la fois
+    'wave-pluck':    { volume: 0.5 }, // pas de spam : géré par la vague de Contact (section 7)
     'copy':          { volume: 0.5 },
   };
   const sfx = { on: true, cache: {}, missing: new Set(), last: {} };
@@ -46,16 +46,19 @@
     return sfx.cache[name];
   }
 
+  // Durée d'un son en secondes, lue dans le fichier (0 tant qu'elle n'est pas connue)
+  function soundDuration(name) {
+    const d = loadSound(name).duration;
+    return Number.isFinite(d) ? d : 0;
+  }
+
   function playSound(name) {
     const def = SOUNDS[name];
     if (!sfx.on || !def || sfx.missing.has(name)) return;
     const now = performance.now();
     if (def.throttle && now - (sfx.last[name] || 0) < def.throttle) return;
-    const base = loadSound(name);
-    // untilEnd : bloqué pendant toute la durée du fichier (lue dans le fichier lui-même)
-    if (def.untilEnd && now < (sfx.last[name] || 0) + (base.duration || 0) * 1000) return;
     sfx.last[name] = now;
-    const a = base.cloneNode(); // une copie par lecture : les sons peuvent se superposer
+    const a = loadSound(name).cloneNode(); // une copie par lecture : les sons peuvent se superposer
     a.volume = Math.min(1, def.volume * MASTER);
     a.play().catch(() => {});
   }
@@ -89,13 +92,14 @@
     return wrap;
   }
 
-  document.querySelectorAll('[data-wave]').forEach((el) => {
+  function decorateWave(el) {
     const label = document.createElement('span');
     label.className = 'btn__label';
     while (el.firstChild) label.appendChild(el.firstChild);
     el.appendChild(label);
     el.appendChild(makeWave());
-  });
+  }
+  document.querySelectorAll('[data-wave]').forEach(decorateWave);
 
   /* 2. HERO ---------------------------------------------------------------- */
   const hero = document.querySelector('[data-hero]');
@@ -173,8 +177,9 @@
   /* 2b. LIGHTBOX (showreel et projets) ---------------------------------------
      Ouverte par tout élément [data-film] : le bouton « See showreel » et les vignettes de Works.
      Elle lit les données du film (vidéo, titre, type, Brief, Concept, Tools) :
-       - sur l'élément cliqué (data-title, data-meta, data-video…),
-       - sinon sur le projet qui le contient (<li class="work"> : data-*, .work__name, .work__meta).
+       - pour un projet de Works : dans data/works.json (voir section 2d) ;
+       - pour le showreel : sur le bouton lui-même (data-title, data-meta, data-video…).
+     Un film au format 9:16 s'affiche en vertical, avec sa légende à droite.
      Se ferme : clic en dehors du panneau, Échap, Retour arrière, bouton Précédent du navigateur
      (on empile une entrée d'historique à l'ouverture). */
   const lightbox = document.querySelector('[data-lightbox]');
@@ -192,17 +197,25 @@
   let lbToken = 0;
 
   function filmData(trigger) {
-    const work = trigger.closest('.work');
-    const read = (key) => trigger.dataset[key] || (work && work.dataset[key]) || '';
-    const text = (sel) => (work && work.querySelector(sel) ? work.querySelector(sel).textContent.trim() : '');
+    const card = trigger.closest('.work');
+    const work = card && worksById.get(card.dataset.id);
+    if (work) {
+      return {
+        title: work.title,
+        meta: workMeta(work),
+        video: (work.video && work.video.mp4) || '',
+        webm: (work.video && work.video.webm) || '',
+        poster: work.poster || '',
+        brief: work.brief || '',
+        concept: work.concept || '',
+        tools: Array.isArray(work.tools) ? work.tools.join(', ') : (work.tools || ''),
+        vertical: work.format === '9:16',
+      };
+    }
+    const d = trigger.dataset;
     return {
-      title: read('title') || text('.work__name'),
-      meta: read('meta') || text('.work__meta'),
-      video: read('video'),
-      poster: read('poster'),
-      brief: read('brief'),
-      concept: read('concept'),
-      tools: read('tools'),
+      title: d.title || '', meta: d.meta || '', video: d.video || '', webm: d.webm || '', poster: d.poster || '',
+      brief: d.brief || '', concept: d.concept || '', tools: d.tools || '', vertical: d.format === '9:16',
     };
   }
 
@@ -213,14 +226,23 @@
 
   function loadFilm(film) {
     const token = ++lbToken;
-    lbFields.forEach((el) => { el.textContent = film[el.dataset.field] || ''; });
+    lbFields.forEach((el) => {
+      el.textContent = film[el.dataset.field] || '';
+      // Brief / Concept / Tools vides : la ligne est masquée (et le bloc entier s'il ne reste rien)
+      const row = el.closest('.lightbox__facts > div');
+      if (row) row.hidden = !el.textContent;
+    });
+    const facts = lightbox.querySelector('.lightbox__facts');
+    if (facts) facts.hidden = !facts.querySelector(':scope > div:not([hidden])');
+    lightbox.classList.toggle('is-vertical', !!film.vertical);
     lbMissing.hidden = true;
     lbVideo.hidden = false;
     if (film.poster) lbVideo.poster = film.poster; else lbVideo.removeAttribute('poster');
     if (!film.video) { showMissing(); return; }
     // Vidéo absente (pas encore ajoutée) : message à la place
     lbVideo.addEventListener('error', () => { if (token === lbToken) showMissing(); }, { once: true });
-    lbVideo.src = film.video;
+    // WebM s'il existe et que le navigateur le lit, sinon MP4 (lu partout)
+    lbVideo.src = film.webm && lbVideo.canPlayType('video/webm; codecs="vp9"') ? film.webm : film.video;
     lbVideo.muted = false;
     lbVideo.play().catch(() => {});
   }
@@ -275,8 +297,10 @@
     document.dispatchEvent(new Event('cursor:refresh'));
   }
 
-  document.querySelectorAll('[data-film]').forEach((el) => {
-    el.addEventListener('click', () => openLightbox(el));
+  // Délégation : marche aussi pour les cartes créées après le chargement (section 2d)
+  document.addEventListener('click', (e) => {
+    const trigger = e.target.closest('[data-film]');
+    if (trigger) openLightbox(trigger);
   });
   lbClose.addEventListener('click', () => closeLightbox());
   lightbox.addEventListener('click', (e) => {
@@ -293,9 +317,8 @@
   window.addEventListener('popstate', () => { if (lbOpen) closeLightbox(true); });
 
   /* 2c. WORKS : FILTRES ---------------------------------------------------------
-     Chaque chip [data-filter] garde les projets dont data-type contient la catégorie. */
+     Chaque chip [data-filter] garde les projets de la catégorie (data-category, voir section 2d). */
   const filterBtns = document.querySelectorAll('[data-filter]');
-  const works = document.querySelectorAll('.work');
   filterBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
       const f = btn.dataset.filter;
@@ -304,8 +327,8 @@
         b.classList.toggle('is-active', on);
         b.setAttribute('aria-pressed', String(on));
       });
-      works.forEach((w) => {
-        const show = f === 'all' || w.dataset.type.split(/\s+/).includes(f);
+      document.querySelectorAll('.work').forEach((w) => {
+        const show = f === 'all' || w.dataset.category === f;
         if (show && w.hidden) {
           w.hidden = false;
           w.classList.add('is-in'); // déjà apparu : pas besoin d'attendre le scroll
@@ -319,6 +342,94 @@
       document.dispatchEvent(new Event('cursor:refresh'));
     });
   });
+
+  /* 2d. WORKS : PROJETS LUS DANS data/works.json ---------------------------------
+     Format : { "version": 1, "works": [ ... ] }. L'ordre du tableau est l'ordre d'affichage ;
+     le projet « featured » est affiché en grand, en premier. Un projet avec « externalUrl »
+     ouvre ce lien (nouvel onglet) au lieu de la lightbox.
+     Le fichier est modifié avec l'outil orikawa-works-editor (dossier voisin du site).
+     Ouverture du site en double-cliquant sur index.html : le navigateur bloque la lecture
+     du fichier, il faut passer par un serveur local (Live Server). */
+  const WORKS_FILE = 'data/works.json';
+  const worksList = document.querySelector('[data-works-list]');
+  const worksById = new Map();
+  const POSTER_ANGLES = [120, 160, 200, 75, 30, 250]; // dégradés d'attente, tant qu'il n'y a pas d'image
+
+  // Ligne de type : « Vertical product video · Concept »
+  const workMeta = (w) => [w.summary, w.isConcept ? 'Concept' : ''].filter(Boolean).join(' · ');
+
+  function el(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text) node.textContent = text;
+    return node;
+  }
+
+  function renderWork(w, index) {
+    const featured = !!w.featured;
+    const external = !!w.externalUrl;
+    const li = el('li', 'work reveal' + (featured ? ' work--featured' : ''));
+    li.dataset.id = w.id;
+    li.dataset.category = w.category;
+    if (!featured) li.style.setProperty('--i', String(Math.max(0, index - 1) % 4)); // décalage d'apparition
+
+    // Vignette : ouvre la lightbox, ou le lien externe dans un nouvel onglet
+    const media = el(external ? 'a' : 'button', 'work__media');
+    if (external) {
+      media.href = w.externalUrl;
+      media.target = '_blank';
+      media.rel = 'noopener';
+    } else {
+      media.type = 'button';
+      media.dataset.cursor = 'play';
+      media.dataset.film = '';
+    }
+    const poster = el('span', 'work__poster');
+    poster.style.setProperty('--a', POSTER_ANGLES[index % POSTER_ANGLES.length] + 'deg');
+    if (w.poster) poster.style.setProperty('--poster', 'url(' + JSON.stringify(w.poster) + ')');
+    media.append(poster, el('span', 'sr-only', (external ? 'Open ' : 'Play ') + w.title + (external ? ' (new tab)' : '')));
+    if (external) media.append(el('span', 'work__badge', '↗'));
+
+    const info = el('div', 'work__info');
+    if (featured) info.append(el('p', 'work__kicker', 'Featured film'));
+    info.append(el('h3', 'work__name', w.title), el('p', 'work__meta', workMeta(w)));
+    if (featured && w.description) info.append(el('p', 'work__desc', w.description));
+    if (featured) {
+      const play = el(external ? 'a' : 'button', 'btn btn--ghost work__play', external ? 'Open the project' : 'Play the film');
+      if (external) { play.href = w.externalUrl; play.target = '_blank'; play.rel = 'noopener'; }
+      else { play.type = 'button'; play.dataset.film = ''; play.dataset.cursor = 'play'; }
+      decorateWave(play);
+      info.append(play);
+    }
+    li.append(media, info);
+    return li;
+  }
+
+  async function loadWorks() {
+    if (!worksList) return;
+    let data;
+    try {
+      const res = await fetch(WORKS_FILE, { cache: 'no-cache' });
+      if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
+      data = await res.json();
+    } catch (err) {
+      console.warn('[works] Impossible de lire ' + WORKS_FILE + ' (ouvre le site avec un serveur local, par exemple Live Server).', err);
+      worksList.append(el('li', 'works__empty', 'Projects could not be loaded.'));
+      return;
+    }
+    const all = Array.isArray(data && data.works) ? data.works : [];
+    all.forEach((w) => worksById.set(w.id, w));
+    // Le projet à la une d'abord, puis les autres dans l'ordre du fichier
+    const featured = all.find((w) => w.featured);
+    const ordered = featured ? [featured, ...all.filter((w) => w !== featured)] : all;
+    ordered.forEach((w, i) => {
+      const li = renderWork(w, i);
+      worksList.append(li);
+      observeReveal(li);
+    });
+    document.dispatchEvent(new Event('cursor:refresh'));
+  }
+  loadWorks();
 
   /* 3. HEADER ----------------------------------------------------------------
      - fond dès le début du défilement, filet une fois le hero passé ;
@@ -355,19 +466,20 @@
   syncHeader();
 
   /* 4. APPARITION AU SCROLL ------------------------------------------------ */
-  const items = document.querySelectorAll('.reveal');
-  if ('IntersectionObserver' in window) {
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        entry.target.classList.add('is-in');
-        io.unobserve(entry.target);
-      });
-    }, { threshold: 0.2 });
-    items.forEach((item) => io.observe(item));
-  } else {
-    items.forEach((item) => item.classList.add('is-in'));
+  const revealIO = 'IntersectionObserver' in window
+    ? new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add('is-in');
+          revealIO.unobserve(entry.target);
+        });
+      }, { threshold: 0.2 })
+    : null;
+  // Aussi appelée pour les cartes de Works, créées après le chargement (section 2d)
+  function observeReveal(item) {
+    if (revealIO) revealIO.observe(item); else item.classList.add('is-in');
   }
+  document.querySelectorAll('.reveal').forEach(observeReveal);
 
   /* 5. GRAIN DE PAPIER -------------------------------------------------------
      Une seule couche fixe (elle ne bouge pas au défilement), générée une fois au chargement.
@@ -472,15 +584,14 @@
      les échos traînent derrière, puis se replient dessous à l'arrêt.
      Le pic se transforme selon ce qui est survolé :
        default  : le pic, incliné comme une flèche de souris classique
-       link     : le pic se déplie en vague
-       button   : le pic droit avec ses trois traits, comme dans le logo
-       play     : le pic couché devient un triangle de lecture, suivi de ses deux échos
+       button   : tous les liens et boutons : le pic droit avec ses trois traits, comme dans le logo
+       play     : « See showreel » et les vignettes de Works : le pic couché devient ▷, suivi de ses échos
        close    : un pic et son reflet forment une croix
        text     : un pic très étroit, comme un curseur de texte
        disabled : la vague à plat (pas de signal)
        clic     : le pic s'écrase légèrement
      Couleurs claires sur la vidéo, dans la lightbox et sur les sections data-theme="dark".
-     Sur un élément : data-cursor="play|close|default" force l'état.
+     Sur un élément : data-cursor="button|play|close|default" force l'état.
      Uniquement avec une souris : le tactile garde son comportement normal. */
   const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
   if (finePointer.matches) initCursor();
@@ -506,7 +617,6 @@
     const SHAPES = {
       pointer: rotate(PEAK),                                                  // le pic incliné (repos)
       peak: PEAK,
-      wave: [[-12, 3], [-6, 12], [0, 3], [6, 12], [12, 3]],                 // le pic déplié
       play: PEAK.map(([x, y]) => [-y * 0.75 + 4, x * 0.75]),                // le pic couché : ▷
       caret: [[-1.6, 10], [-0.8, 0], [0, -10], [0.8, 0], [1.6, 10]],
       flat: [[-10, 0], [-5, 0], [0, 0], [5, 0], [10, 0]],
@@ -520,7 +630,6 @@
     //   'off'   = masqué
     const STATES = {
       default:  { main: 'pointer', e1: ['pointer', 0, -GAP, 'trail'], e2: ['pointer', 0, GAP, 'trail'] },
-      link:     { main: 'wave', e1: ['wave', 0, -GAP, 'trail'], e2: ['wave', 0, GAP, 'trail'] },
       button:   { main: 'peak', e1: ['peak', 0, -GAP, 'fixed'], e2: ['peak', 0, GAP, 'fixed'] },
       play:     { main: 'play', e1: ['play', -6, 0, 'fixed'], e2: ['play', -12, 0, 'fixed'] },
       close:    { main: 'crossA', e1: ['crossV', 0, 0, 'fixed'], e2: ['crossV', 0, 0, 'off'] },
@@ -573,10 +682,7 @@
       if (explicit && (!interactive || interactive.contains(explicit))) {
         return { state: explicit.dataset.cursor };
       }
-      if (interactive) {
-        const isButton = interactive.matches('button, [role="button"], .btn');
-        return { state: isButton ? 'button' : 'link' };
-      }
+      if (interactive) return { state: 'button' };
       return { state: 'default' };
     }
 
@@ -735,19 +841,25 @@
 
   /* La vague du logo, en grand, en bas de la section Contact (canvas).
      - à l'arrivée sur la section, elle se déplie depuis une ligne plate ;
-     - elle ondule doucement en permanence ;
-     - sous la souris, elle s'amplifie localement ;
-     - un clic dans la section y lance une onde qui part vers les côtés.
-     Elle ne tourne que lorsque la section est visible. Mouvement réduit : dessin fixe.
+     - elle ondule doucement en permanence, et s'amplifie sous la souris ;
+     - seule la vague elle-même est cliquable (le curseur passe en mode bouton dessus) ;
+     - un clic la pince comme une corde : elle vibre, ses trois traits s'écartent puis se rejoignent,
+       un halo menthe s'ouvre au point touché et deux ondes partent vers les côtés ;
+     - tant que le son wave-pluck joue (durée lue dans le fichier), on ne peut pas la pincer à nouveau.
+     Elle ne tourne que lorsque la section est visible. Mouvement réduit : dessin fixe, son seul.
      Réglages : WAVE ci-dessous. */
   const WAVE = {
     period: 112,     // largeur d'un aller-retour du zigzag (px)
     gap: 12,         // écart entre les trois traits
     bottom: 120,     // distance entre la vague et le bas de la section
     base: 12,        // amplitude au repos
-    hover: 64,       // amplitude ajoutée sous la souris
+    hover: 54,       // amplitude ajoutée sous la souris
     radius: 240,     // largeur de la zone amplifiée sous la souris
-    pulse: 48,       // amplitude de l'onde lancée par un clic
+    hit: 44,         // zone cliquable : distance maximale à la vague (px, au-dessus et au-dessous)
+    pluck: 62,       // amplitude de la vibration au point pincé
+    freq: 3.2,       // vitesse de vibration (allers-retours par seconde)
+    ring: 42,        // amplitude des ondes qui partent vers les côtés
+    fallback: 2.2,   // durée de l'animation si le son est coupé ou absent (s)
     speed: 0.32,     // vitesse de défilement
     lines: [         // du haut vers le bas, comme le logo : menthe, puis crème
       'rgba(41,227,190,.9)',
@@ -764,11 +876,34 @@
     const still = () => reduceMotion.matches;
     let W = 0, H = 0;
     let visible = false, frame = 0, last = 0;
-    let phase = 0, intro = 0, hover = 0, px = 0, targetX = 0, pointerX = null, inside = false;
-    let pulses = [];
+    let phase = 0, intro = 0, hover = 0, px = 0, targetX = 0, inside = false;
+    let pointer = null;   // dernière position de la souris (écran), convertie au prochain dessin
+    let localY = -1e4;    // hauteur de la souris dans la section
+    let pluck = null;     // pincement en cours : { x, t, dur }
+    let armed = false;    // la souris est sur la vague et un pincement est possible
 
     // Zigzag de -1 à 1 (même forme que la vague du logo)
     const tri = (u) => 1 - 4 * Math.abs(Math.round(u) - u);
+    const baseY = () => H - WAVE.bottom;
+    const nearWave = (y) => Math.abs(y - baseY()) < WAVE.hit;
+    const locked = (now) => !!pluck && now < pluck.t + pluck.dur * 1000;
+
+    // Sur la vague (et pincement possible) : le curseur passe en mode bouton
+    function setArmed(on) {
+      if (on === armed) return;
+      armed = on;
+      if (on) section.dataset.cursor = 'button';
+      else delete section.dataset.cursor;
+      document.dispatchEvent(new Event('cursor:refresh'));
+    }
+
+    function readPointer() {
+      if (!pointer) return;
+      const r = section.getBoundingClientRect();
+      targetX = pointer.x - r.left;
+      localY = pointer.y - r.top;
+      pointer = null;
+    }
 
     function resize() {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -785,49 +920,83 @@
       const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
       last = now;
       const t = now / 1000;
-      if (still()) { intro = 1; hover = 0; pulses = []; }
+      const calm = still();
+      readPointer();
+      setArmed(inside && nearWave(localY) && !locked(now));
+      if (pluck && !locked(now)) pluck = null;
+
+      if (calm) { intro = 1; hover = 0; }
       else {
         phase += dt * WAVE.speed;
         intro = Math.min(1, intro + dt / 1.8);
-        if (pointerX !== null) { targetX = pointerX - section.getBoundingClientRect().left; pointerX = null; }
-        hover += ((inside ? 1 : 0) - hover) * 0.06;
+        hover += ((inside ? (armed ? 1 : 0.45) : 0) - hover) * 0.08;
         px += (targetX - px) * 0.12;
-        pulses = pulses.filter((p) => now - p.t < 2400);
       }
       const unfold = 1 - Math.pow(1 - intro, 3);
-      const baseY = H - WAVE.bottom;
+      const by = baseY();
+
+      // Pincement : âge, avancement (0 → 1) et énergie restante
+      let age = 0, life = 1, energy = 0;
+      if (pluck && !calm) {
+        age = (now - pluck.t) / 1000;
+        life = Math.min(1, age / pluck.dur);
+        energy = Math.exp(-3 * life) * (1 - life);
+      }
 
       ctx.clearRect(0, 0, W, H);
+
+      // Halo menthe qui s'ouvre au point pincé
+      if (energy > 0.002) {
+        const rad = 40 + 300 * Math.sqrt(life);
+        const g = ctx.createRadialGradient(pluck.x, by, 0, pluck.x, by, rad);
+        g.addColorStop(0, `rgba(41,227,190,${0.3 * energy})`);
+        g.addColorStop(1, 'rgba(41,227,190,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(pluck.x - rad, by - rad, rad * 2, rad * 2);
+      }
+
+      // Points de chaque trait : les sommets du zigzag, plus 3 points entre deux sommets
+      // (pour que la vibration se courbe en douceur), décalés par le défilement
+      const half = WAVE.period / 2;
+      const step = half / 4;
+      const offset = ((phase * WAVE.period) % half + half) % half;
+      const xs = [];
+      for (let x = -half + offset; x <= W + half; x += step) xs.push(x);
+
+      const amps = [], envs = [];
+      xs.forEach((x) => {
+        let a = WAVE.base * (1 + 0.3 * Math.sin(t * 0.9 + x / 380));
+        a += WAVE.hover * hover * Math.exp(-(((x - px) / WAVE.radius) ** 2));
+        let env = 0;
+        if (energy > 0.002) {
+          // deux ondes qui partent vers les côtés
+          const ring = Math.abs(x - pluck.x) - age * 620;
+          a += WAVE.ring * Math.exp(-((ring / 110) ** 2)) * (1 - life);
+          // la zone qui vibre s'élargit avec le temps
+          env = Math.exp(-(((x - pluck.x) / (120 + 700 * life)) ** 2));
+        }
+        amps.push(a * unfold);
+        envs.push(env);
+      });
+
       ctx.lineWidth = 2;
       ctx.lineJoin = 'round';
       ctx.lineCap = 'round';
-
-      // Les sommets du zigzag (tous les demi-aller-retour), décalés par le défilement
-      const half = WAVE.period / 2;
-      const offset = ((phase * WAVE.period) % half + half) % half;
-      const xs = [];
-      for (let x = -half + offset; x <= W + half; x += half) xs.push(x);
-
-      const amps = xs.map((x) => {
-        let a = WAVE.base * (1 + 0.3 * Math.sin(t * 0.9 + x / 380));
-        a += WAVE.hover * hover * Math.exp(-(((x - px) / WAVE.radius) ** 2));
-        pulses.forEach((p) => {
-          const age = (now - p.t) / 1000;
-          const ring = Math.abs(x - p.x) - age * 560;
-          a += WAVE.pulse * Math.exp(-((ring / 90) ** 2)) * Math.max(0, 1 - age / 2.4);
-        });
-        return a * unfold;
-      });
-
       WAVE.lines.forEach((color, i) => {
+        // chaque trait vibre avec un léger décalage : les trois traits s'écartent puis se rejoignent
+        const swing = energy > 0.002 ? Math.sin(2 * Math.PI * WAVE.freq * age - i * 0.75) : 0;
         ctx.strokeStyle = color;
+        ctx.shadowColor = 'rgba(41,227,190,.8)';
+        ctx.shadowBlur = i === 0 ? 18 * energy : 0; // lueur sur le trait menthe pendant la vibration
         ctx.beginPath();
         xs.forEach((x, k) => {
-          const y = baseY + (i - 1) * WAVE.gap + amps[k] * tri(x / WAVE.period - phase);
+          const spread = (i - 1) * WAVE.gap * (1 + 1.6 * energy * envs[k]);
+          const y = by + spread + amps[k] * tri(x / WAVE.period - phase) + WAVE.pluck * energy * envs[k] * swing;
           if (k) ctx.lineTo(x, y); else ctx.moveTo(x, y);
         });
         ctx.stroke();
       });
+      ctx.shadowBlur = 0;
     }
 
     function loop(now) {
@@ -839,6 +1008,7 @@
     new IntersectionObserver(([entry]) => {
       visible = entry.isIntersecting;
       if (visible) start();
+      else { inside = false; setArmed(false); }
     }, { threshold: 0 }).observe(section);
 
     if ('ResizeObserver' in window) new ResizeObserver(resize).observe(section);
@@ -846,15 +1016,19 @@
     resize();
 
     section.addEventListener('pointermove', (e) => {
-      pointerX = e.clientX; // converti en position dans la section au prochain dessin
+      pointer = { x: e.clientX, y: e.clientY }; // lu au prochain dessin
       inside = true;
+      if (still()) draw(performance.now()); // pas de boucle en mouvement réduit
     }, { passive: true });
-    section.addEventListener('pointerleave', () => { inside = false; });
+    section.addEventListener('pointerleave', () => { inside = false; setArmed(false); });
     section.addEventListener('pointerdown', (e) => {
       if (e.target.closest('a, button')) return;
+      const now = performance.now();
       const r = section.getBoundingClientRect();
-      pulses.push({ x: e.clientX - r.left, t: performance.now() });
+      if (!nearWave(e.clientY - r.top) || locked(now)) return; // seulement sur la vague, et pas pendant le son
+      pluck = { x: e.clientX - r.left, t: now, dur: soundDuration('wave-pluck') || WAVE.fallback };
       playSound('wave-pluck');
+      setArmed(false);
       start();
     });
     reduceMotion.addEventListener('change', () => { if (still()) draw(performance.now()); else start(); });

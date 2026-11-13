@@ -28,7 +28,7 @@ Toutes les sections sont en place : hero, Works, About, Contact, lightbox. Il re
 
 ## Direction artistique (telle qu'appliquée dans le code)
 
-- **Couleurs** : crème `#FFF7DD` (fond), sable `#F6EAC4` (fond d'About), nuit `#131522` (texte, fond de Contact et du footer), bleu `#323A72` (texte secondaire), menthe `#29E3BE` (accent). Jaune et magenta : sur la planche, pas encore utilisés.
+- **Couleurs** : crème `#FFF7DD` (fond), sable `#F6EAC4` (fond d'About), nuit `#131522` (texte, fond de Contact et du footer), bleu `#323A72` (texte secondaire), menthe `#29E3BE` (accent, et couleur de surlignage du texte sélectionné). Jaune et magenta : sur la planche, pas encore utilisés.
 - **Passage d'une section à l'autre** : Works sur crème, About glisse doucement vers le sable, puis tout en bas du sable vers la nuit (en passant par le bleu) pour amener Contact. Pas de filet entre les sections.
 - **Typographies** : Effra (titres, boutons, interface), EB Garamond (corps de texte, annotations en italique), Emily Austin (touches manuscrites).
 - **Annotations** : phrases en EB Garamond italique, couleur douce, sans trait devant (note du hero, notes sous les titres, types des projets). Touches manuscrites en Emily Austin (légende de la photo, « copy », lien du footer). Tailles réglables en haut de `styles.css` : `--note-size` et `--script-size`. Le bouton « sound on / off » est en Effra.
@@ -43,16 +43,15 @@ Toutes les sections sont en place : hero, Works, About, Contact, lightbox. Il re
 | État | Quand | Rendu |
 |---|---|---|
 | default | partout | le pic incliné |
-| link | liens, bulles d'About | le pic se déplie en vague |
-| button | boutons | le pic droit avec ses trois traits, comme dans le logo |
-| play | « See showreel », vignettes de Works | le pic couché devient ▷, suivi de ses deux échos |
+| button | tous les liens et boutons (menu, filtres, bulles d'About, vague de Contact…) | le pic droit avec ses trois traits, comme dans le logo |
+| play | « See showreel », vignettes de Works, « Play the film » | le pic couché devient ▷, vers la droite, suivi de ses deux échos |
 | close | dans la lightbox, en dehors du panneau | un pic et son reflet forment une croix |
 | text | champs de saisie | un pic très étroit, comme un curseur de texte |
 | disabled | éléments désactivés | la vague à plat (pas de signal) |
 | pressed | pendant le clic | le pic s'écrase |
 | hidden | souris hors de la fenêtre | fondu |
 
-Pour forcer un état sur un élément : `data-cursor="play"` (ou `close`, `link`, `default`). Réglages dans `main.js` (section 6) : `TILT`, `ECHO`, `TRAIL`, `MORPH`, `GAP`, `SHAPES` et `STATES`.
+Pour forcer un état sur un élément : `data-cursor="play"` (ou `button`, `close`, `default`). Réglages dans `main.js` (section 6) : `TILT`, `ECHO`, `TRAIL`, `MORPH`, `GAP`, `SHAPES` et `STATES`.
 
 ## Sons
 
@@ -68,17 +67,16 @@ Réglages : objet `SOUNDS` (volume de chaque son, délai minimum entre deux lect
 
 ## Works
 
-Un film mis en avant (vignette à gauche ; à droite le nom, le type, une courte description et le bouton « Play the film »), puis les autres projets en petites vignettes, 4 par ligne (2 sous 1080 px). Filtres en chips : All, DSP, Music, Other. Chaque vignette ouvre la lightbox : la vidéo, puis la légende (nom et type, puis Brief, Concept, Tools).
+Un film mis en avant (vignette à gauche ; à droite le nom, le type, une courte description et le bouton « Play the film »), puis les autres projets en petites vignettes, 4 par ligne (2 sous 1080 px). Filtres en chips : All, DSP, Music, Other. Chaque vignette ouvre la lightbox : la vidéo au centre, et sa légende à droite (nom et type, puis Brief, Concept, Tools).
 
-Chaque projet est un `<li class="work">` dans `index.html` :
-- `.work__name` et `.work__meta` : le nom et le type, affichés sous la vignette et repris dans la lightbox ;
-- `.work__desc` (film mis en avant seulement) : la courte description ;
-- `data-type` : les catégories pour les filtres (`dsp`, `music`, `other`), séparées par des espaces ;
-- `data-video` et `data-poster` : la vidéo de la lightbox (avec le son) et son image d'attente ;
-- `data-brief`, `data-concept`, `data-tools` : les trois textes de la légende de la lightbox (1 à 2 lignes) ;
-- `style="--poster: url(assets/…)"` sur `.work__poster` : l'image de la vignette (en attendant, un dégradé aux couleurs de la marque).
+Les projets sont décrits dans **`data/works.json`**, lu par `main.js` (section 2d), qui construit les cartes. Ils ne sont plus écrits dans `index.html`.
+- Pour les modifier : l'outil **orikawa-works-editor** (dossier voisin du site, `npm start`), ou le fichier à la main.
+- L'ordre du fichier est l'ordre d'affichage ; le projet `"featured": true` (un seul) est affiché en grand, en premier.
+- Champs : `id`, `title`, `year`, `category` (`dsp`, `music`, `other`), `format` (`16:9` ou `9:16`), `featured`, `isConcept` (ajoute « · Concept » au type), `summary` (le type, une ligne), `description` (texte du projet à la une), `brief`, `concept`, `tools` (liste), `video` (`mp4`, `webm` : adresse chez l'hébergeur ou chemin relatif), `poster`, `durationSeconds`, `externalUrl` (si rempli, la carte ouvre ce lien dans un nouvel onglet au lieu de la vidéo).
+- Dans la lightbox, la vidéo est au centre et la légende à droite, en 16:9 comme en 9:16.
+- Le site doit être servi par un serveur local (Live Server) pour lire le fichier ; en double-cliquant sur `index.html`, le navigateur bloque la lecture.
 
-Pour ajouter un filtre : un bouton `<button class="chip" type="button" data-filter="motcle" aria-pressed="false">Mot clé</button>` à côté des autres, et `motcle` dans le `data-type` des projets concernés.
+Pour ajouter un filtre : un bouton `<button class="chip" type="button" data-filter="motcle" aria-pressed="false">Mot clé</button>` à côté des autres, et la catégorie dans le schéma de l'outil (`lib/schema.js`).
 
 ## About
 
@@ -93,9 +91,10 @@ Dernière section, sur fond nuit, centrée : grand titre « Let's unfold / your 
 
 L'effet : la vague du logo, en grand, en bas de la section (dessinée en canvas par `main.js`, section 7) :
 - à l'arrivée sur la section, elle se déplie depuis une ligne plate ;
-- elle ondule doucement en permanence ;
-- sous la souris, elle s'amplifie localement ;
-- un clic dans la section y lance une onde qui part vers les côtés.
+- elle ondule doucement en permanence, et s'amplifie sous la souris ;
+- seule la vague elle-même est cliquable (le curseur passe en mode bouton quand il est dessus ; réglage `hit`) ;
+- un clic la pince comme une corde : elle vibre, ses trois traits s'écartent puis se rejoignent, le trait menthe s'illumine, un halo s'ouvre au point touché et deux ondes partent vers les côtés ;
+- tant que le son `wave-pluck` joue, on ne peut pas la pincer à nouveau : l'animation dure exactement la durée du fichier (2,2 s si le son est coupé ou absent).
 
 Elle ne tourne que lorsque la section est visible ; avec le mouvement réduit, elle reste fixe. Réglages : objet `WAVE` dans `main.js`.
 
@@ -108,7 +107,7 @@ Le logo du header est une copie en ligne de `assets/logo.svg`, dans `index.html`
 - Couleurs des sections (crème, sable, nuit) et passage en dégradé entre elles.
 - Bandes de vague entre Works et About, et dans le passage vers Contact.
 - Entrée du titre au chargement : chaque ligne monte, se révèle (flou → net) et se resserre.
-- Lightbox : fond nuit flouté, vidéo 16:9 la plus grande possible avec la légende dessous. Se ferme en cliquant en dehors, avec Échap, Retour arrière ou le bouton Précédent du navigateur.
+- Lightbox : fond nuit flouté, vidéo exactement au centre de l'écran, légende sur le côté droit (alignée sur le bas d'une vidéo 16:9, centrée en hauteur face à une vidéo 9:16). Les lignes Brief / Concept / Tools vides sont masquées. Sur tablette, une vidéo verticale garde sa légende à côté ; sur téléphone, et pour le 16:9 sous 960 px, la légende passe dessous. Se ferme en cliquant en dehors, avec Échap, Retour arrière ou le bouton Précédent du navigateur.
 - Appel « Explore works » avec une flèche qui descend doucement, dans le bas du hero.
 - Boutons : petits et texte centré au repos, la pastille s'agrandit vers le bas au survol pour laisser la place à la vague.
 - Durées : 150 ms, 250 ms, 600 ms. Apparition au scroll : montée de 24 px, décalage de 80 ms.

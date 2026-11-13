@@ -91,14 +91,10 @@
       </div>
     </section>
 
-    <!-- WORKS : un film mis en avant (avec une courte description), puis les projets en petites vignettes, avec des filtres.
-         Chaque projet = un <li class="work">. Pour le remplir :
-           data-type     : catégories pour les filtres (dsp, music, other), séparées par des espaces
-           data-video    : la vidéo lue dans la lightbox (avec le son)
-           data-poster   : l'image affichée avant la lecture, dans la lightbox
-           data-brief / data-concept / data-tools : les trois textes sous la vidéo, dans la lightbox (1 à 2 lignes)
-           style="--poster: url(assets/…)" sur .work__poster : l'image de la vignette
-         Le nom (.work__name) et le type (.work__meta) servent aussi de titre dans la lightbox. -->
+    <!-- WORKS : les projets viennent du fichier data/works.json (lu par main.js, section 2d).
+         Ne pas écrire les projets ici : les modifier avec l'outil orikawa-works-editor,
+         ou directement dans data/works.json. L'ordre du fichier est l'ordre d'affichage ;
+         le projet « featured » est affiché en grand, en premier. -->
     <section class="works" id="works" aria-labelledby="works-title">
       <div class="section-head">
         <h2 id="works-title" class="section-head__title reveal">Works</h2>
@@ -111,71 +107,7 @@
         </div>
       </div>
 
-      <ul class="works__list">
-        <!-- Film mis en avant : vignette à gauche ; à droite, nom, type et une courte description -->
-        <li class="work work--featured reveal" data-type="dsp product" data-video="" data-poster=""
-            data-brief="[1–2 lines]" data-concept="[1–2 lines]" data-tools="[1–2 lines]">
-          <button class="work__media" type="button" data-cursor="play" data-film>
-            <span class="work__poster" style="--a: 120deg"></span>
-            <span class="sr-only">Play soothe2</span>
-          </button>
-          <div class="work__info">
-            <p class="work__kicker">Featured film</p>
-            <h3 class="work__name">soothe2</h3>
-            <p class="work__meta">Vertical product video · Concept</p>
-            <p class="work__desc">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante venenatis dapibus, posuere velit aliquet.</p>
-            <button class="btn btn--ghost work__play" type="button" data-wave data-film data-cursor="play">Play the film</button>
-          </div>
-        </li>
-
-        <li class="work reveal" data-type="dsp explainer" data-video="" data-poster=""
-            data-brief="[1–2 lines]" data-concept="[1–2 lines]" data-tools="[1–2 lines]">
-          <button class="work__media" type="button" data-cursor="play" data-film>
-            <span class="work__poster" style="--a: 160deg"></span>
-            <span class="sr-only">Play Project 02</span>
-          </button>
-          <div class="work__info">
-            <h3 class="work__name">Project 02</h3>
-            <p class="work__meta">Explainer video · Motion and sound</p>
-          </div>
-        </li>
-
-        <li class="work reveal" style="--i:1" data-type="music product" data-video="" data-poster=""
-            data-brief="[1–2 lines]" data-concept="[1–2 lines]" data-tools="[1–2 lines]">
-          <button class="work__media" type="button" data-cursor="play" data-film>
-            <span class="work__poster" style="--a: 200deg"></span>
-            <span class="sr-only">Play Project 03</span>
-          </button>
-          <div class="work__info">
-            <h3 class="work__name">Project 03</h3>
-            <p class="work__meta">Product launch film · Motion</p>
-          </div>
-        </li>
-
-        <li class="work reveal" style="--i:2" data-type="dsp sound explainer" data-video="" data-poster=""
-            data-brief="[1–2 lines]" data-concept="[1–2 lines]" data-tools="[1–2 lines]">
-          <button class="work__media" type="button" data-cursor="play" data-film>
-            <span class="work__poster" style="--a: 75deg"></span>
-            <span class="sr-only">Play Project 04</span>
-          </button>
-          <div class="work__info">
-            <h3 class="work__name">Project 04</h3>
-            <p class="work__meta">Sound design · Explainer</p>
-          </div>
-        </li>
-
-        <li class="work reveal" style="--i:3" data-type="other sound" data-video="" data-poster=""
-            data-brief="[1–2 lines]" data-concept="[1–2 lines]" data-tools="[1–2 lines]">
-          <button class="work__media" type="button" data-cursor="play" data-film>
-            <span class="work__poster" style="--a: 30deg"></span>
-            <span class="sr-only">Play Project 05</span>
-          </button>
-          <div class="work__info">
-            <h3 class="work__name">Project 05</h3>
-            <p class="work__meta">Sound design · Plugin interface</p>
-          </div>
-        </li>
-      </ul>
+      <ul class="works__list" data-works-list aria-live="polite"></ul>
     </section>
 
     <!-- ABOUT : photo du studio et texte côte à côte, puis les compétences en bulles sur une ligne.
@@ -210,12 +142,12 @@
         <div class="about__skills">
           <h3 class="about__skills-title reveal">What I do</h3>
           <ul class="skills reveal" style="--i:1">
-            <li class="bubble" tabindex="0" data-cursor="link">Motion design<span class="bubble__gif" aria-hidden="true"></span></li>
-            <li class="bubble" tabindex="0" data-cursor="link">Sound design<span class="bubble__gif" aria-hidden="true"></span></li>
-            <li class="bubble" tabindex="0" data-cursor="link">Explainer films<span class="bubble__gif" aria-hidden="true"></span></li>
-            <li class="bubble" tabindex="0" data-cursor="link">Product videos<span class="bubble__gif" aria-hidden="true"></span></li>
-            <li class="bubble" tabindex="0" data-cursor="link">Storyboarding<span class="bubble__gif" aria-hidden="true"></span></li>
-            <li class="bubble" tabindex="0" data-cursor="link">UI animation<span class="bubble__gif" aria-hidden="true"></span></li>
+            <li class="bubble" tabindex="0" data-cursor="button">Motion design<span class="bubble__gif" aria-hidden="true"></span></li>
+            <li class="bubble" tabindex="0" data-cursor="button">Sound design<span class="bubble__gif" aria-hidden="true"></span></li>
+            <li class="bubble" tabindex="0" data-cursor="button">Explainer films<span class="bubble__gif" aria-hidden="true"></span></li>
+            <li class="bubble" tabindex="0" data-cursor="button">Product videos<span class="bubble__gif" aria-hidden="true"></span></li>
+            <li class="bubble" tabindex="0" data-cursor="button">Storyboarding<span class="bubble__gif" aria-hidden="true"></span></li>
+            <li class="bubble" tabindex="0" data-cursor="button">UI animation<span class="bubble__gif" aria-hidden="true"></span></li>
           </ul>
         </div>
       </div>

@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "works": [
+    {
+      "id": "soothe2",
+      "title": "soothe2",
+      "year": 2026,
+      "category": "dsp",
+      "format": "9:16",
+      "featured": true,
+      "isConcept": true,
+      "summary": "Vertical product video",
+      "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante venenatis dapibus, posuere velit aliquet.",
+      "brief": "[1–2 lines]",
+      "concept": "[1–2 lines]",
+      "tools": [
+        "[1–2 lines]"
+      ],
+      "video": {
+        "mp4": null,
+        "webm": null
+      },
+      "poster": null,
+      "durationSeconds": null,
+      "externalUrl": null
+    },
+    {
+      "id": "orion-laurentin-showreel",
+      "title": "orion laurentin showreel",
+      "year": 2026,
+      "category": "music",
+      "format": "16:9",
+      "featured": false,
+      "isConcept": false,
+      "summary": "test about test testant",
+      "description": "",
+      "brief": "",
+      "concept": "",
+      "tools": [],
+      "video": {
+        "mp4": null,
+        "webm": null
+      },
+      "poster": null,
+      "durationSeconds": null,
+      "externalUrl": null
+    }
+  ]
+}

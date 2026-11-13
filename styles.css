@@ -79,6 +79,12 @@ body {
 
 a { color: inherit; }
 
+/* Surlignage du texte sélectionné : menthe de la marque, texte nuit (lisible sur fond clair comme foncé) */
+::selection {
+  background: rgb(41 227 190 / .55);
+  color: var(--night);
+}
+
 :focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 4px;
@@ -597,12 +603,17 @@ a { color: inherit; }
 }
 
 /* 5b. LIGHTBOX (showreel et projets) -------------------------------------- */
-/* Fond nuit flouté. Un panneau centré : la vidéo 16:9, puis la légende en dessous
-   (titre et type à gauche, puis Brief, Concept, Tools), comme dans le wireframe.
+/* Fond nuit flouté. Trois colonnes : [vide] [vidéo] [légende].
+   Les deux colonnes de côté ont la même largeur : la vidéo est exactement au centre de l'écran,
+   la légende (titre, type, Brief, Concept, Tools) se pose à sa droite, alignée sur le bas de la vidéo.
+   Même disposition en 16:9 et en 9:16 ; seule la forme de la vidéo change.
    Ouverture : le fond apparaît, la vidéo monte et se déploie, puis la légende suit. */
 .lightbox {
   --focus: var(--mint);
-  --cap-h: 120px; /* place réservée à la légende sous la vidéo */
+  --side: clamp(12rem, 16vw, 17rem);   /* largeur de la légende (et de la colonne vide en miroir) */
+  --gap: var(--space-12);              /* espace entre la vidéo et les colonnes de côté */
+  --avail-h: calc(100svh - var(--header-h) + 8px - var(--space-8));
+  --avail-w: calc(100vw - 2 * var(--margin) - 2 * var(--side) - 2 * var(--gap));
   position: fixed;
   inset: 0;
   z-index: 50;
@@ -623,10 +634,16 @@ a { color: inherit; }
 }
 .lightbox__panel {
   position: relative;
-  width: min(100%, calc((100svh - var(--header-h) + 8px - var(--space-8) - var(--cap-h)) * 16 / 9));
+  display: grid;
+  grid-template-columns: var(--side) auto var(--side);
+  align-items: end;
+  gap: var(--gap);
 }
 .lightbox__frame {
   position: relative;
+  grid-column: 2;
+  /* 16:9 : la plus grande taille qui tient en largeur (entre les colonnes) et en hauteur */
+  width: min(var(--avail-w), var(--avail-h) * 16 / 9);
   aspect-ratio: 16 / 9;
   border-radius: var(--radius-m);
   overflow: hidden;
@@ -658,19 +675,20 @@ a { color: inherit; }
 
 /* Légende */
 .lightbox__caption {
+  grid-column: 3;
   display: grid;
-  grid-template-columns: 1.3fr repeat(3, 1fr);
-  gap: var(--space-8);
-  align-items: start;
-  margin-top: var(--space-6);
+  gap: var(--space-4);
+  align-content: end;
+  padding-bottom: var(--space-1);
   opacity: 0;
-  transform: translateY(12px);
+  transform: translateX(12px);
   transition: opacity var(--t-base) var(--ease-out), transform var(--t-base) var(--ease-out);
 }
 .lightbox__title {
   margin: 0;
   font: 700 1.75rem/1.1 var(--font-title);
   letter-spacing: -.01em;
+  text-wrap: balance;
 }
 .lightbox__meta {
   margin: var(--space-2) 0 0;
@@ -679,7 +697,16 @@ a { color: inherit; }
   font-style: italic;
   line-height: 1.3;
 }
-.lightbox__facts { display: contents; }
+/* Brief, Concept, Tools : empilés sous un filet discret */
+.lightbox__facts {
+  display: grid;
+  gap: var(--space-4);
+  margin: var(--space-2) 0 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid rgb(255 247 221 / .14);
+}
+.lightbox__facts[hidden],
+.lightbox__facts > div[hidden] { display: none; }
 .lightbox__facts dt {
   margin-bottom: var(--space-1);
   font: 700 .875rem/1.3 var(--font-title);
@@ -689,10 +716,10 @@ a { color: inherit; }
   color: rgb(255 247 221 / .7);
   font-size: 1rem;
   line-height: 1.35;
-  /* 1 à 2 lignes */
+  /* quelques lignes au plus */
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 4;
   overflow: hidden;
 }
 
@@ -748,6 +775,22 @@ a { color: inherit; }
   transition-delay: 300ms;
 }
 .has-lightbox { overflow: hidden; }
+
+/* Film vertical (format 9:16) : même principe — vidéo au centre, légende à droite.
+   La vidéo prend toute la hauteur ; comme elle laisse plus de place en largeur, la colonne de
+   légende est plus large, et la légende est centrée en hauteur face à la vidéo. */
+.lightbox.is-vertical { --side: clamp(14rem, 24vw, 24rem); }
+.lightbox.is-vertical .lightbox__frame {
+  width: auto;
+  height: min(var(--avail-h), var(--avail-w) * 16 / 9);
+  aspect-ratio: 9 / 16;
+}
+.lightbox.is-vertical .lightbox__caption {
+  align-self: center;
+  max-width: 22rem;
+  padding-bottom: 0;
+}
+.lightbox.is-vertical .lightbox__title { font-size: 2rem; }
 
 /* 5c. WORKS --------------------------------------------------------------- */
 /* En-tête (titre, note, filtres), un film mis en avant avec ses infos, puis les projets en petites vignettes.
@@ -908,6 +951,28 @@ a { color: inherit; }
 }
 .work:has(.work__media:hover) .work__name::after,
 .work:has(.work__media:focus-visible) .work__name::after { transform: scaleX(1); }
+
+/* Projet qui renvoie vers un lien externe : petite flèche sur la vignette */
+.work__badge {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-pill);
+  background: rgb(255 247 221 / .9);
+  color: var(--night);
+  font: 700 1rem/1 var(--font-title);
+}
+/* Fichier de projets illisible */
+.works__empty {
+  grid-column: 1 / -1;
+  color: var(--text-soft);
+  font-size: var(--note-size);
+  font-style: italic;
+}
 
 /* Apparition après un changement de filtre */
 .work.is-entering { animation: work-in var(--t-slow) var(--ease-out) both; }
@@ -1271,11 +1336,31 @@ a { color: inherit; }
   .about__photo { width: min(100%, 420px); margin-inline: auto; }
   .about__text { max-width: none; }
   .work--featured { grid-template-columns: 1fr; gap: var(--space-6); }
-  .lightbox { --cap-h: 200px; }
-  .lightbox__caption { grid-template-columns: repeat(3, 1fr); gap: var(--space-4) var(--space-6); }
-  .lightbox__caption > :first-child { grid-column: 1 / -1; }
+  /* Plus la place pour une colonne de chaque côté : la légende passe sous la vidéo */
+  .lightbox { --cap-h: 210px; }
+  .lightbox__panel { grid-template-columns: auto; justify-items: center; gap: var(--space-6); }
+  .lightbox__frame,
+  .lightbox.is-vertical .lightbox__frame { grid-column: 1; }
+  .lightbox__frame { width: min(calc(100vw - 2 * var(--margin)), (var(--avail-h) - var(--cap-h)) * 16 / 9); }
+  .lightbox__caption { grid-column: 1; width: 100%; max-width: 46rem; transform: translateY(12px); }
+  .lightbox__facts { grid-template-columns: repeat(3, 1fr); gap: var(--space-4) var(--space-6); }
+  /* Vertical : la vidéo est étroite, elle garde sa légende à côté (le duo est centré) */
+  .lightbox.is-vertical .lightbox__panel {
+    grid-template-columns: auto minmax(12rem, 18rem);
+    justify-content: center;
+    justify-items: start;
+    gap: var(--space-8);
+  }
+  .lightbox.is-vertical .lightbox__frame { width: auto; height: var(--avail-h); }
+  .lightbox.is-vertical .lightbox__caption { grid-column: 2; width: auto; transform: translateX(12px); }
+  .lightbox.is-vertical .lightbox__facts { grid-template-columns: 1fr; }
 }
 @media (max-width: 760px) {
+  .lightbox__facts { grid-template-columns: 1fr; }
+  /* Téléphone : la légende passe sous la vidéo verticale */
+  .lightbox.is-vertical .lightbox__panel { grid-template-columns: auto; justify-items: center; gap: var(--space-6); }
+  .lightbox.is-vertical .lightbox__frame { height: 62svh; }
+  .lightbox.is-vertical .lightbox__caption { grid-column: 1; width: 100%; max-width: 22rem; transform: translateY(12px); }
   .nav a:not(.btn) { display: none; }
   .section-head { grid-template-columns: 1fr; }
   .contact { padding-bottom: 200px; }
